@@ -25,8 +25,10 @@ class CustomerWriter extends AbstractWriter
      * @param Mage_Customer_Model_Customer $customerModel
      * @param Mage_Customer_Model_Address $addressModel
      */
-    public function __construct(\Mage_Customer_Model_Customer $customerModel, \Mage_Customer_Model_Address $addressModel = null)
-    {
+    public function __construct(
+        \Mage_Customer_Model_Customer $customerModel,
+        \Mage_Customer_Model_Address $addressModel = null
+    ) {
         $this->customerModel    = $customerModel;
         $this->addressModel     = $addressModel;
     }
@@ -39,7 +41,7 @@ class CustomerWriter extends AbstractWriter
         $customer = clone $this->customerModel;
 
         //get address
-        if(isset($item['address'])) {
+        if (isset($item['address'])) {
             $addresses = $item['address'];
             unset($item['address']);
         }
@@ -48,8 +50,8 @@ class CustomerWriter extends AbstractWriter
 
         //if we are adding addresses - create
         //model for each and set it on the customer
-        if($this->addressModel) {
-            foreach($addresses as $addressData) {
+        if ($this->addressModel) {
+            foreach ($addresses as $addressData) {
                 $address = clone $this->addressModel;
                 $address->setData($addressData);
                 $customer->addAddress($address);
