@@ -71,7 +71,8 @@ class DateTimeFormatterValueConverter implements ValueConverterInterface
             $date = \DateTime::createFromFormat($this->inputFormat, $input);
             if (false === $date) {
                 throw new \UnexpectedValueException(
-                    $input . ' is not a valid date/time according to format ' . $this->inputFormat);
+                    $input . ' is not a valid date/time according to format ' . $this->inputFormat
+                );
             }
         } else {
             $date = new \DateTime($input);
