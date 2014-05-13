@@ -1,11 +1,13 @@
 <?php
 
+namespace Jh\DataImportMagentoTest\Writer;
+
 use Jh\DataImportMagento\Writer\CustomerWriter;
 
 /**
  * Class CustomerWriterTest
- * @author Aydin Hassan <aydin@wearejh.com>
  * @package Jh\DataImportMagentoTest\Writer
+ * @author Aydin Hassan <aydin@wearejh.com>
  */
 class CustomerWriterTest extends \PHPUnit_Framework_TestCase
 {
