@@ -7,7 +7,7 @@ use Jh\DataImportMagento\ItemConverter\ItemNesterConverter;
 /**
  * Class ItemNestConverterTest
  * @package Jh\DataImportMagentoTest\ItemConverter
- * @author Aydin Hassan <aydin@wearejh.com>
+ * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
 class ItemNestConverterTest extends \PHPUnit_Framework_TestCase
 {

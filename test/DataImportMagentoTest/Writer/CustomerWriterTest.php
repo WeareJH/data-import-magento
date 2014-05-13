@@ -7,7 +7,7 @@ use Jh\DataImportMagento\Writer\CustomerWriter;
 /**
  * Class CustomerWriterTest
  * @package Jh\DataImportMagentoTest\Writer
- * @author Aydin Hassan <aydin@wearejh.com>
+ * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
 class CustomerWriterTest extends \PHPUnit_Framework_TestCase
 {
