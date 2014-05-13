@@ -68,15 +68,16 @@ class ItemNesterConverter implements ItemConverterInterface
             if (!is_array($mapping)) {
                 $processedMappings[$mapping] = true;
             } else {
-                if (isset($mapping[1])) {
-                    if (!is_bool($mapping[1])) {
-                        throw new InvalidArgumentException(
-                            "Second Argument should be an boolean value - whether to remove the value from parent row"
-                        );
-                    }
+
+                $field = key($mapping);
+                $value = $mapping[$field];
+
+                if (!is_bool($value)) {
+                    $mapping = array($field, true);
                 } else {
-                    $mapping[1] = true;
+                    $mapping = array($field, $value);
                 }
+
                 $processedMappings[$mapping[0]] = $mapping[1];
             }
         }

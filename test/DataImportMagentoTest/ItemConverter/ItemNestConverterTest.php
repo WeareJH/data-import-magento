@@ -38,8 +38,8 @@ class ItemNestConverterTest extends \PHPUnit_Framework_TestCase
     {
 
         $mappings = array(
-            array('nestMe1', false),
-            array('nestMe2', true),
+            array('nestMe1' => false),
+            array('nestMe2' => true),
         );
 
         $itemConvert = $this->getMockBuilder('Jh\DataImportMagento\ItemConverter\ItemNesterConverter')
@@ -56,11 +56,11 @@ class ItemNestConverterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $itemConvert->getMappings());
     }
 
-    public function testSetMappingsThrowsExceptionIfRemoveArgumentNotBoolean()
+    public function testSetMappingsUsesTrueIfRemoveArgumentNotBoolean()
     {
         $mappings = array(
-            array('nestMe1', new \stdClass),
-            array('nestMe2', true),
+            array('nestMe1' => new \stdClass),
+            array('nestMe2' => false),
         );
 
         $itemConvert = $this->getMockBuilder('Jh\DataImportMagento\ItemConverter\ItemNesterConverter')
@@ -68,18 +68,20 @@ class ItemNestConverterTest extends \PHPUnit_Framework_TestCase
             ->setMethods(array('__construct'))
             ->getMock();
 
-        $this->setExpectedException(
-            'InvalidArgumentException',
-            'Second Argument should be an boolean value - whether to remove the value from parent row'
-        );
         $itemConvert->setMappings($mappings);
+
+        $expected = array(
+            'nestMe1' => true,
+            'nestMe2' => false,
+        );
+        $this->assertEquals($expected, $itemConvert->getMappings());
     }
 
     public function testSetMappingAcceptsBoth2dAnd3dMappings()
     {
 
         $mappings = array(
-            array('nestMe1', false),
+            array('nestMe1' => false),
             'nestMe2',
         );
 
@@ -100,8 +102,8 @@ class ItemNestConverterTest extends \PHPUnit_Framework_TestCase
     public function testDataIsTransformedCorrectly()
     {
         $mappings = array(
-            array('nestMe1', false),
-            array('nestMe2', true),
+            array('nestMe1' => false),
+            array('nestMe2' => true),
         );
 
         $input = array(
