@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "fda3e6508f89e919cc443600ec462e1b",
+    "hash": "10373b16298d8eb5692544aef09164dd",
     "packages": [
         {
             "name": "ddeboer/data-import",
@@ -206,6 +206,16 @@
                 "web service"
             ],
             "time": "2014-05-07 17:04:22"
+        },
+        {
+            "name": "magento/magento",
+            "version": "1.8",
+            "source": {
+                "type": "svn",
+                "url": "http://svn.magentocommerce.com/source",
+                "reference": "branches/1.8"
+            },
+            "type": "library"
         },
         {
             "name": "phpunit/php-code-coverage",
