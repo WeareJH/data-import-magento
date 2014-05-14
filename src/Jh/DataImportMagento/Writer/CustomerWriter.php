@@ -2,6 +2,7 @@
 namespace Jh\DataImportMagento\Writer;
 
 use Ddeboer\DataImport\Writer\AbstractWriter;
+use Jh\DataImportMagento\Exception\MagentoSaveException;
 
 /**
  * Class MagentoCustomerWriter
@@ -88,12 +89,20 @@ class CustomerWriter extends AbstractWriter
                 }
 
                 $address = clone $this->addressModel;
+
                 $address->setData($addressData);
+                $address->setIsDefaultShipping(true);
+                $address->setIsDefaultBilling(true);
                 $customer->addAddress($address);
             }
         }
 
-        $customer->save();
+        try {
+            $customer->save();
+        } catch (\Mage_Core_Exception $e) {
+            throw new MagentoSaveException($e);
+        }
+
     }
 
     /**
