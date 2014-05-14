@@ -72,8 +72,15 @@ class CustomerWriter extends AbstractWriter
             foreach ($addresses as $addressData) {
 
                 //lookup region info:
-                $name = $addressData['firstname'] . " " . $addressData['lastname'];
-                $regionId = $this->lookUpRegion($addressData['region'], $addressData['country_id'], $name);
+                $name = '';
+                if (isset($addressData['firstname']) && $addressData['lastname']) {
+                    $name = $addressData['firstname'] . " " . $addressData['lastname'];
+                }
+
+                $regionId = false;
+                if (isset($addressData['region']) && $addressData['country_id']) {
+                    $regionId = $this->lookUpRegion($addressData['region'], $addressData['country_id'], $name);
+                }
 
                 if ($regionId) {
                     $addressData['region_id'] = $regionId;
