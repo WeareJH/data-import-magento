@@ -26,4 +26,4 @@ matrix:
     - php: hhvm
 
 notifications:
-  slack: jh:AqFUa4OFXzh9pmAOjYVoOAaV
+  slack: jh:CplQ8j20QUCT1nLGKH1XNxrO
