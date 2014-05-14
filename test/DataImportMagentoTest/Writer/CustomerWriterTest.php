@@ -334,4 +334,36 @@ class CustomerWriterTest extends \PHPUnit_Framework_TestCase
 
         $this->customerWriter->__construct($this->customerModel, $addressModel, $directoryResourceModel);
     }
+
+    public function testMagentoSaveExceptionIsThrowIfSaveFails()
+    {
+        $data = array(
+            'firstname' => 'Aydin',
+            'lastname'  => 'Hassan',
+        );
+
+        $this->customerModel
+            ->expects($this->once())
+            ->method('setData')
+            ->with($data);
+
+        $e = new \Mage_Customer_Exception("Save Failed");
+        $this->customerModel
+            ->expects($this->once())
+            ->method('save')
+            ->will($this->throwException($e));
+
+        $this->customerModel
+            ->expects($this->once())
+            ->method('getPrimaryAddresses')
+            ->will($this->returnValue(array()));
+
+        $this->customerModel
+            ->expects($this->once())
+            ->method('getAdditionalAddresses')
+            ->will($this->returnValue(array()));
+
+        $this->setExpectedException('Jh\DataImportMagento\Exception\MagentoSaveException', 'Save Failed');
+        $this->customerWriter->writeItem($data);
+    }
 }
