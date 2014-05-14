@@ -53,6 +53,12 @@ class DateTimeFormatterValueConverterTest extends \PHPUnit_Framework_TestCase
         $converter->convert($value);
     }
 
+    public function testNullIsReturnedIfNullPassed()
+    {
+        $converter = new DateTimeFormatterValueConverter('d-m-y', 'd-M-Y');
+        $this->assertNull($converter->convert(null));
+    }
+
 
 }
 

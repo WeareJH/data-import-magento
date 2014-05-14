@@ -39,7 +39,7 @@ class ItemNesterConverter implements ItemConverterInterface
     {
 
         if (isset($input[$this->resultKey])) {
-            throw new InvalidArgumentException($this->resultKey . " is already set");
+            throw new InvalidArgumentException("'$this->resultKey' is already set");
         }
 
         $input[$this->resultKey] = array();

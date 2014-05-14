@@ -21,9 +21,9 @@ class ItemNestConverterTest extends \PHPUnit_Framework_TestCase
         );
 
         $itemConvert = $this->getMockBuilder('Jh\DataImportMagento\ItemConverter\ItemNesterConverter')
-                            ->disableOriginalConstructor()
-                            ->setMethods(array('__construct'))
-                            ->getMock();
+            ->disableOriginalConstructor()
+            ->setMethods(array('__construct'))
+            ->getMock();
 
         $itemConvert->setMappings($mappings);
 
@@ -127,5 +127,24 @@ class ItemNestConverterTest extends \PHPUnit_Framework_TestCase
         $output = $itemConvert->convert($input);
 
         $this->assertEquals($expected, $output);
+    }
+
+    public function testConvertThrowsExceptionIfResultKeyExistsInData()
+    {
+        $mappings = array(
+            array('nestMe1' => false),
+            array('nestMe2' => true),
+        );
+
+        $input = array(
+            'nestMe1'       => 'someValue1',
+            'nestMe2'       => 'someValue2',
+            'leaveMeHere'   => 'someValue3',
+            'nested'        => new \stdClass
+        );
+
+        $this->setExpectedException('InvalidArgumentException', "'nested' is already set");
+        $itemConvert = new ItemNesterConverter($mappings, 'nested');
+        $itemConvert->convert($input);
     }
 }
