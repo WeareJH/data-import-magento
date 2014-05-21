@@ -100,13 +100,19 @@ class CustomerWriter extends AbstractWriter
         try {
             $customer->save();
         } catch (\Mage_Core_Exception $e) {
-            throw new MagentoSaveException($e);
+
+            $message = $e->getMessage();
+            if (isset($item['email'])) {
+                $message .= " : " . $item['email'];
+            }
+
+            throw new MagentoSaveException($message);
         }
 
     }
 
     /**
-     * @param Mage_Directory_Model_Resource_Region_Collection $regions
+     * @param \Mage_Directory_Model_Resource_Region_Collection $regions
      * @return array
      */
     public function processRegions(\Mage_Directory_Model_Resource_Region_Collection $regions)

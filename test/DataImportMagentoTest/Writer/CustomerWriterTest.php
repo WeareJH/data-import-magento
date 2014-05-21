@@ -335,11 +335,12 @@ class CustomerWriterTest extends \PHPUnit_Framework_TestCase
         $this->customerWriter->__construct($this->customerModel, $addressModel, $directoryResourceModel);
     }
 
-    public function testMagentoSaveExceptionIsThrowIfSaveFails()
+    public function testMagentoSaveExceptionIsThrownIfSaveFails()
     {
         $data = array(
             'firstname' => 'Aydin',
             'lastname'  => 'Hassan',
+            'email'     => 'aydin@hotmail.co.uk'
         );
 
         $this->customerModel
