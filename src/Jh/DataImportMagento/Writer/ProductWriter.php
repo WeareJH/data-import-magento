@@ -7,6 +7,7 @@ use Jh\DataImportMagento\Exception\MagentoSaveException;
 /**
  * Class ProductWriter
  * @author Adam Paterson <adam@wearejh.com>
+ * @author Aydin Hassan <aydin@hotmail.co.uk>
  * @package Jh\DataImportMagento\Writer
  */
 class ProductWriter extends AbstractWriter
@@ -15,34 +16,45 @@ class ProductWriter extends AbstractWriter
      * @var \Mage_Catalog_Model_Product
      */
     protected $productModel;
-    protected $attributeModel;
-    protected $defaultAttributeSetId;
-    protected $defaultProductData;
-    protected $defaultStockData;
-    protected $productAttributes;
+
+    /**
+     * @var \Mage_Eav_Model_Entity_Attribute
+     */
+    protected $eavAttrModel;
+
+    /**
+     * @var \Mage_Eav_Model_Entity_Attribute_Source_Table
+     */
+    protected $eavAttrSrcModel;
+
+    /**
+     * @var null
+     */
+    protected $defaultAttributeSetId = null;
+
+    /**
+     * @var array
+     */
+    protected $defaultProductData = array();
+
+    /**
+     * @var array
+     */
+    protected $defaultStockData = array();
 
     /**
      * @param \Mage_Catalog_Model_Product $productModel
+     * @param \Mage_Eav_Model_Entity_Attribute $eavAttrModel
+     * @param \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
      */
     public function __construct(
         \Mage_Catalog_Model_Product $productModel,
-        \Mage_Eav_Model_Config $eavModel
+        \Mage_Eav_Model_Entity_Attribute $eavAttrModel,
+        \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
     ) {
-        $this->productModel = $productModel;
-        $this->attributeModel = $eavModel;
-    }
-
-    public function getAttributeCollection()
-    {
-        $this->productAttributes = $this->attributeModel->loadByCode($this->getEntityTypeCode())
-            ->getAttributeCollection()
-            ->addFieldToFilter('frontend_input', array('select', 'multiselect'))
-            ->addFieldToFilter('is_user_defined', true);
-    }
-
-    protected function getEntityTypeCode()
-    {
-        return $this->productModel->getResource()->getEntityType()->getEntityTypeCode();
+        $this->productModel     = $productModel;
+        $this->eavAttrModel     = $eavAttrModel;
+        $this->eavAttrSrcModel  = $eavAttrSrcModel;
     }
 
     /**
@@ -86,7 +98,6 @@ class ProductWriter extends AbstractWriter
             'website_ids'   => '1',
             'type'  => 'simple'
         ];
-        $this->getAttributeCollection();
     }
 
 
@@ -97,12 +108,12 @@ class ProductWriter extends AbstractWriter
      */
     public function getAttrCodeCreateIfNotExist($attrCode, $attrValue)
     {
-        $attrModel              = \Mage::getModel('eav/entity_attribute');
-        $attributeOptionsModel  = \Mage::getModel('eav/entity_attribute_source_table') ;
+        $attrModel              = clone $this->eavAttrModel;
+        $attributeOptionsModel  = clone $this->eavAttrSrcModel;
 
         $attributeId            = $attrModel->getIdByCode('catalog_product', $attrCode);
         $attribute              = $attrModel->load($attributeId);
-
+        $attributeOptionsModel->setAttribute($attribute);
         $options                = $attributeOptionsModel->getAllOptions(false);
 
         foreach($options as $option) {
@@ -114,7 +125,7 @@ class ProductWriter extends AbstractWriter
         //not found - create it
         $attribute->setData('option', array(
             'value' => array(
-                'option' => array($attrValue, $attrValue)
+                'option' => array(strtolower($attrValue), $attrValue)
             )
         ));
         $attribute->save();
@@ -125,16 +136,14 @@ class ProductWriter extends AbstractWriter
     }
 
     /**
-     * TODO: Put all attributes in an array of attributes. Eg nested 'attributes' => ['color' => 'Blue', 'size' => 'Fat']
-     * TODO: Then we can loop them and call @see ProductWriter::getAttrCodeCreateIfNotExist
      *
      * @param array $item
+     * @return \Ddeboer\DataImport\Writer\WriterInterface|void
      * @throws \Jh\DataImportMagento\Exception\MagentoSaveException
      */
     public function writeItem(array $item)
     {
         $product = clone $this->productModel;
-        $attribute = clone $this->attributeModel;
 
         if (!isset($item['attribute_set_id'])) {
             $item['attribute_set_id'] = $this->defaultAttributeSetId;
@@ -152,7 +161,7 @@ class ProductWriter extends AbstractWriter
 
         $product->setData($item);
 
-        if(isset($product['attributes'])) {
+        if(isset($item['attributes'])) {
             $this->processAttributes($item['attributes'], $product);
         }
 
