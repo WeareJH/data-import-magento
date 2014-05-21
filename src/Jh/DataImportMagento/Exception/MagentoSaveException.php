@@ -8,15 +8,8 @@ use Exception;
 /**
  * Class MagentoSaveException
  * @package Jh\DataImportMagento\Exception
- * @author Aydin Hassan <aydin@wearejh.com>
+ * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
 class MagentoSaveException extends Exception implements ExceptionInterface
 {
-    /**
-     * @param \Mage_Core_Exception $e
-     */
-    public function __construct(\Mage_Core_Exception $e)
-    {
-        parent::__construct($e->getMessage(), $e->getCode(), $e);
-    }
 }
