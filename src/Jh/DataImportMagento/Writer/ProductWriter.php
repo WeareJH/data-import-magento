@@ -1,4 +1,5 @@
 <?php
+
 namespace Jh\DataImportMagento\Writer;
 
 use Ddeboer\DataImport\Writer\AbstractWriter;
@@ -60,7 +61,8 @@ class ProductWriter extends AbstractWriter
     /**
      * TODO: More performant way to keep tracking of already present/newly added attribute options
      * EG. We could load the existing options for each attribute in the @see ProductWriter::prepare() method
-     * When we search and create attribute options in @see ProductWriter::getAttrCodeCreateIfNotExist add them to a class variable
+     * When we search and create attribute options in @see ProductWriter::getAttrCodeCreateIfNotExist add them
+     * to a class variable
      * holding all attribute options so we don't have to query DB again???? #winning
      *
      * @return \Ddeboer\DataImport\Writer\WriterInterface|void
@@ -116,7 +118,7 @@ class ProductWriter extends AbstractWriter
         $attributeOptionsModel->setAttribute($attribute);
         $options                = $attributeOptionsModel->getAllOptions(false);
 
-        foreach($options as $option) {
+        foreach ($options as $option) {
             if (strtolower($option['label']) == strtolower($attrValue)) {
                 return $option['value'];
             }
@@ -149,11 +151,11 @@ class ProductWriter extends AbstractWriter
             $item['attribute_set_id'] = $this->defaultAttributeSetId;
         }
 
-        if(!isset($item['stock_data'])) {
+        if (!isset($item['stock_data'])) {
             $item['stock_data'] = $this->defaultStockData;
         }
 
-        if(!isset($item['weight'])) {
+        if (!isset($item['weight'])) {
             $item['weight'] = '0';
         }
 
@@ -161,7 +163,7 @@ class ProductWriter extends AbstractWriter
 
         $product->setData($item);
 
-        if(isset($item['attributes'])) {
+        if (isset($item['attributes'])) {
             $this->processAttributes($item['attributes'], $product);
         }
 
@@ -178,7 +180,7 @@ class ProductWriter extends AbstractWriter
      */
     public function processAttributes(array $attributes, \Mage_Catalog_Model_Product $product)
     {
-        foreach($attributes as $attributeCode => $attributeValue) {
+        foreach ($attributes as $attributeCode => $attributeValue) {
 
             if (!$attributeValue) {
                 continue;

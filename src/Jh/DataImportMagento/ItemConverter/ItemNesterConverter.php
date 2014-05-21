@@ -65,7 +65,7 @@ class ItemNesterConverter implements ItemConverterInterface
             }
         }
 
-        if($this->arrayNest) {
+        if ($this->arrayNest) {
             $input[$this->resultKey][] = $data;
         } else {
             $input[$this->resultKey] = $data;
