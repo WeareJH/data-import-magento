@@ -23,13 +23,24 @@ class ItemNesterConverter implements ItemConverterInterface
     protected $resultKey;
 
     /**
+     * Whether to nest in an array or a direct nest
+     * Array nest would look like 'address' => [[ Addr1 ], [Addr2]]
+     * Normal nest would look like 'address' => ['Steet1' => 'Street', 'City' => 'Notss]
+     *
+     * @var bool
+     */
+    protected $arrayNest = true;
+
+    /**
      * @param array $mappings
      * @param string $resultKey
+     * @param bool
      */
-    public function __construct(array $mappings, $resultKey)
+    public function __construct(array $mappings, $resultKey, $array = true)
     {
         $this->setMappings($mappings);
         $this->resultKey = $resultKey;
+        $this->arrayNest = $array;
     }
 
     /**
@@ -53,7 +64,14 @@ class ItemNesterConverter implements ItemConverterInterface
                 unset($input[$from]);
             }
         }
-        $input[$this->resultKey][] = $data;
+
+        if($this->arrayNest) {
+            $input[$this->resultKey][] = $data;
+        } else {
+            $input[$this->resultKey] = $data;
+
+        }
+
         return $input;
     }
 

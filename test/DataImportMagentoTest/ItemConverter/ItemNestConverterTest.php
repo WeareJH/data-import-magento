@@ -129,6 +129,34 @@ class ItemNestConverterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expected, $output);
     }
 
+    public function testDataIsTransformedCorrectlyIfArrayNestIsFalse()
+    {
+        $mappings = array(
+            array('nestMe1' => false),
+            array('nestMe2' => true),
+        );
+
+        $input = array(
+            'nestMe1'       => 'someValue1',
+            'nestMe2'       => 'someValue2',
+            'leaveMeHere'   => 'someValue3',
+        );
+
+        $expected = array(
+            'nestMe1'       => 'someValue1',
+            'leaveMeHere'   => 'someValue3',
+            'nested'        => array(
+                    'nestMe1'       => 'someValue1',
+                    'nestMe2'       => 'someValue2',
+            )
+        );
+
+        $itemConvert = new ItemNesterConverter($mappings, 'nested', false);
+        $output = $itemConvert->convert($input);
+
+        $this->assertEquals($expected, $output);
+    }
+
     public function testConvertThrowsExceptionIfResultKeyExistsInData()
     {
         $mappings = array(
