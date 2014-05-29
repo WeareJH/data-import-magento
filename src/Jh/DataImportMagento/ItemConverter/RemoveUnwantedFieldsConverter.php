@@ -22,7 +22,12 @@ class RemoveUnwantedFieldsConverter implements ItemConverterInterface
      */
     public function __construct(array $fieldsTokeep)
     {
-        $this->fieldsTokeep = array_flip($fieldsTokeep);
+        //create an array of field to keep as the keys
+        //they will have a value of ''
+        $this->fieldsTokeep = array_fill_keys(
+            array_keys(array_flip($fieldsTokeep)),
+            ''
+        );
     }
 
     /**
@@ -34,6 +39,13 @@ class RemoveUnwantedFieldsConverter implements ItemConverterInterface
      */
     public function convert($input)
     {
-        return array_intersect_key($input, $this->fieldsTokeep);
+        //remove keys not specified in $this->fieldsToKeep
+        $values         = array_intersect_key($input, $this->fieldsTokeep);
+        //check which values are missing from $values but are in $this->fieldsToKeep
+        $missingFields  = array_diff_key($this->fieldsTokeep, $values);
+        //merge missing fields with $values - using the default value specified in the constructor: ''
+        $values         = array_merge($values, $missingFields);
+
+        return $values;
     }
 }
