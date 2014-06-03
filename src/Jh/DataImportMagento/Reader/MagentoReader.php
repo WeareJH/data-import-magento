@@ -95,7 +95,7 @@ class MagentoReader implements ReaderInterface
      */
     public function rewind()
     {
-        $this->statement = $this->_getStatement($this->collection->getSelect());
+        $this->statement = $this->getStatement($this->collection->getSelect());
         $this->next();
     }
 
