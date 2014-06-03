@@ -122,7 +122,12 @@ class CsvWriter extends AbstractWriter
     public function writeLine(array $data)
     {
         $line = implode($this->delimiter, array_map(function ($string) {
-            return sprintf('%s%s%s', $this->enclosure, str_replace('"', '', $string), $this->enclosure);
+            $string = str_replace('"', '', $string);
+            //if the string is empty don't quote it
+            if (empty($string)) {
+                return $string;
+            }
+            return sprintf('%s%s%s', $this->enclosure, $string, $this->enclosure);
         }, $data));
 
         fputs($this->fp, $line . $this->eol);
