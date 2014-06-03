@@ -40,7 +40,7 @@ class AttributeOptionValueConverter implements ValueConverterInterface
      */
     public function convert($input)
     {
-        if(!array_key_exists($input, $this->options)) {
+        if (!array_key_exists($input, $this->options)) {
             throw new UnexpectedValueException(
                 sprintf(
                     '"%s" does not appear to be a valid attribute option for "%s"',
