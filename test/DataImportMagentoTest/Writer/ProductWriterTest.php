@@ -213,7 +213,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
 
         $productResource = $this->getMockBuilder('\Mage_Catalog_Model_Resource_Product')
             ->disableOriginalConstructor()
-            ->getMock();;
+            ->getMock();
 
         $this->productModel
              ->expects($this->once())
@@ -250,7 +250,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
 
         $productResource = $this->getMockBuilder('\Mage_Catalog_Model_Resource_Product')
             ->disableOriginalConstructor()
-            ->getMock();;
+            ->getMock();
 
         $this->productModel
             ->expects($this->once())
@@ -302,7 +302,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
 
         $productResource = $this->getMockBuilder('\Mage_Catalog_Model_Resource_Product')
             ->disableOriginalConstructor()
-            ->getMock();;
+            ->getMock();
 
         $this->productModel
             ->expects($this->once())
@@ -319,5 +319,4 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
         $this->setExpectedException('Jh\DataImportMagento\Exception\MagentoSaveException', 'Save Failed');
         $this->productWriter->writeItem($data);
     }
-
 }
