@@ -38,6 +38,11 @@ class MagentoReader implements ReaderInterface
     protected $count = null;
 
     /**
+     * @var null|\Varien_Db_Select
+     */
+    protected $select = null;
+
+    /**
      * @param \Mage_Core_Model_Resource_Db_Collection_Abstract $collection
      */
     public function __construct(\Mage_Core_Model_Resource_Db_Collection_Abstract $collection)
@@ -45,8 +50,7 @@ class MagentoReader implements ReaderInterface
         $this->collection = $collection;
 
         //get SQL statement
-        $select             = $this->collection->getSelect();
-        $this->statement    = $this->getStatement($select);
+        $this->select = $this->collection->getSelect();
     }
 
     /**
@@ -87,7 +91,7 @@ class MagentoReader implements ReaderInterface
      */
     public function valid()
     {
-        return ($this->count > $this->current);
+        return ($this->count() > $this->current);
     }
 
     /**
@@ -95,7 +99,8 @@ class MagentoReader implements ReaderInterface
      */
     public function rewind()
     {
-        $this->statement = $this->getStatement($this->collection->getSelect());
+        $this->statement = $this->select->query();
+        $this->current = 0;
         $this->next();
     }
 
@@ -107,10 +112,10 @@ class MagentoReader implements ReaderInterface
     public function getFields()
     {
         if (empty($this->data)) {
-            $this->current();
+            $data = $this->select->query()->fetch();
         }
 
-        return array_keys($this->data);
+        return array_keys($data);
     }
 
     /**
@@ -124,23 +129,5 @@ class MagentoReader implements ReaderInterface
             $this->count = $this->collection->getSize();
         }
         return $this->count;
-    }
-
-    /**
-     * @param $query
-     * @return Zend_Db_Statement_Interface
-     * @throws ReaderException
-     */
-    protected function getStatement($query)
-    {
-        if ($query instanceof \Zend_Db_Statement_Interface) {
-            return $query;
-        }
-
-        if ($query instanceof \Zend_Db_Select) {
-            return $query->query();
-        }
-
-        throw new ReaderException("Invalid Query Given");
     }
 }
