@@ -211,16 +211,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->method('setData')
             ->with($data);
 
-        $productResource = $this->getMockBuilder('\Mage_Catalog_Model_Resource_Product')
-            ->disableOriginalConstructor()
-            ->getMock();
-
         $this->productModel
-             ->expects($this->once())
-             ->method('getResource')
-             ->will($this->returnValue($productResource));
-
-        $productResource
             ->expects($this->once())
             ->method('save')
             ->with($this->productModel);
@@ -248,17 +239,8 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->method('setData')
             ->with($data);
 
-        $productResource = $this->getMockBuilder('\Mage_Catalog_Model_Resource_Product')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->productModel
-            ->expects($this->once())
-            ->method('getResource')
-            ->will($this->returnValue($productResource));
-
         $e = new \Mage_Customer_Exception("Save Failed");
-        $productResource
+        $this->productModel
             ->expects($this->once())
             ->method('save')
             ->with($this->productModel)
@@ -300,17 +282,8 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->method('setData')
             ->with($expected);
 
-        $productResource = $this->getMockBuilder('\Mage_Catalog_Model_Resource_Product')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->productModel
-            ->expects($this->once())
-            ->method('getResource')
-            ->will($this->returnValue($productResource));
-
         $e = new \Mage_Customer_Exception("Save Failed");
-        $productResource
+        $this->productModel
             ->expects($this->once())
             ->method('save')
             ->with($this->productModel)
