@@ -98,7 +98,7 @@ class ProductWriter extends AbstractWriter
             'status'    => '1',
             'tax_class_id'  => 1,
             'website_ids'   => '1',
-            'type'  => 'simple'
+            'type_id'  => 'simple'
         ];
     }
 
@@ -168,7 +168,7 @@ class ProductWriter extends AbstractWriter
         }
 
         try {
-            $product->getResource()->save($product);
+            $product->save($product);
         } catch (\Mage_Core_Exception $e) {
             throw new MagentoSaveException($e);
         }
