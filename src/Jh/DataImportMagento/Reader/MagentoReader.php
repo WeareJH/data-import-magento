@@ -91,7 +91,7 @@ class MagentoReader implements ReaderInterface
      */
     public function valid()
     {
-        return ($this->count() > $this->current);
+        return $this->current <= $this->count();
     }
 
     /**
