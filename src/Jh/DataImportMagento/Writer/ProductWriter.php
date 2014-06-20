@@ -94,11 +94,11 @@ class ProductWriter extends AbstractWriter
             'stock_status_changed_auto'     => 0
         ];
         $this->defaultProductData = [
-            'weight'    => '0',
-            'status'    => '1',
-            'tax_class_id'  => 1,
+            'weight'        => '0',
+            'status'        => '1',
+            'tax_class_id'  => 2,   //Taxable Goods Tax Class
             'website_ids'   => '1',
-            'type'  => 'simple'
+            'type'          => 'simple'
         ];
     }
 
