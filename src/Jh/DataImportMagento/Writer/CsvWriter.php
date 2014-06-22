@@ -124,7 +124,7 @@ class CsvWriter extends AbstractWriter
         $line = implode($this->delimiter, array_map(function ($string) {
             $string = str_replace('"', '', $string);
             //if the string is empty don't quote it
-            if (empty($string)) {
+            if (empty($string) && $string !== '0') {
                 return $string;
             }
             return sprintf('%s%s%s', $this->enclosure, $string, $this->enclosure);
