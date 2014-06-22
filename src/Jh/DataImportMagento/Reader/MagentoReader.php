@@ -91,7 +91,14 @@ class MagentoReader implements ReaderInterface
      */
     public function valid()
     {
-        return $this->current <= $this->count();
+        /**
+         * Make sure $this->data is not false
+         * Wierd bug with Magento getSize() on a collection
+         * using joins & GROUP BY. COUNT(DISTINCT(idfield))
+         * seems to fix it but is hard to patch. This simple check should return false
+         * if the row if null
+         */
+        return $this->current <= $this->count() && $this->data;
     }
 
     /**
