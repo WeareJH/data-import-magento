@@ -146,10 +146,10 @@ class CsvWriter extends AbstractWriter
                 throw new ReaderException("Row contains a different amount of items to headers");
             }
 
-            $data = $this->orderDataByColumnHeaders($item);
+            $item = $this->orderDataByColumnHeaders($item);
         }
 
-        $this->writeLine($data);
+        $this->writeLine($item);
     }
 
     /**
