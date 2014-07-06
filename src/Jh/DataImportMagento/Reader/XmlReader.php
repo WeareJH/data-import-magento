@@ -15,14 +15,23 @@ class XmlReader extends ArrayReader
 {
 
     /**
-     * @param \SplFileObject $file
+     * @param array $stream
      * @param array $xPaths
      */
-    public function __construct(\SplFileObject $file, array $xPaths = array())
+    public function __construct($stream, array $xPaths = array())
     {
-        $fileContents   = file_get_contents($file->getPathname());
+        if (!is_resource($stream) || !'stream' == get_resource_type($stream)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'Expects argument to be a stream resource, got %s',
+                    is_resource($stream) ? get_resource_type($stream) : gettype($stream)
+                )
+            );
+        }
+
+        $xml = stream_get_contents($stream);
         try {
-            $xmlFuse = new XmlFuse($fileContents, $xPaths);
+            $xmlFuse = new XmlFuse($xml, $xPaths);
         } catch (\UnexpectedValueException $e) {
             throw new ReaderException($e->getMessage(), 0, $e);
         }

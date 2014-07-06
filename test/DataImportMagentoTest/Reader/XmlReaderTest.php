@@ -15,13 +15,13 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
 
     public function testValidXmlCanBeParsedTrue()
     {
-        $file = new \SplFileObject(__DIR__ . '/../Fixtures/valid_xml.xml');
+        $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r");
         $this->reader = new XmlReader($file);
     }
 
     public function testInvalidXmlThrowsException()
     {
-        $file = new \SplFileObject(__DIR__ . '/../Fixtures/invalid_xml.xml');
+        $file = fopen(__DIR__ . '/../Fixtures/invalid_xml.xml', "r+");
 
         $expectedMessage = "XML Parsing Failed. Errors: 'Premature end of data in tag orderStatus line 2'";
 
@@ -31,7 +31,7 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
 
     public function testStructureOfDecodedXmlIsValid()
     {
-        $file = new \SplFileObject(__DIR__ . '/../Fixtures/valid_xml.xml');
+        $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r+");
         $this->reader = new XmlReader($file, array(
             '//orderStatus/order',
             'lines/line'
@@ -77,7 +77,7 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
 
     public function testGetFields()
     {
-        $file = new \SplFileObject(__DIR__ . '/../Fixtures/valid_xml.xml');
+        $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r+");
         $this->reader = new XmlReader($file, array(
             '//orderStatus/order',
             'lines/line'
@@ -103,7 +103,7 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
 
     public function testCount()
     {
-        $file = new \SplFileObject(__DIR__ . '/../Fixtures/valid_xml.xml');
+        $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r+");
         $this->reader = new XmlReader($file, array(
             '//orderStatus/order',
             'lines/line'
