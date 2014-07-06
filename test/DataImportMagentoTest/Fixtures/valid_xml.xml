@@ -1,32 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<orderStatus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<orderStatus>
     <order>
-        <clientCode>511</clientCode>
-        <orderNumber>OR0000008</orderNumber>
-        <customerOrderNumber>323424324234</customerOrderNumber>
-        <statuses>
-            <status>
-                <statusCode>APK</statusCode>
-                <statusDescription>Awaiting Picking</statusDescription>
-                <statusDate>2014-06-24T13:14:51.000Z</statusDate>
-                <userId>STEVE</userId>
-                <documentReference/>
-                <statusAction>Added</statusAction>
-            </status>
-            <status>
-                <statusCode>PA</statusCode>
-                <statusDescription>Part Allocated</statusDescription>
-                <statusDate>2014-06-24T13:14:51.000Z</statusDate>
-                <userId/>
-                <documentReference/>
-                <statusAction>Added</statusAction>
-            </status>
-        </statuses>
+        <clientCode>54</clientCode>
+        <orderNumber>000001</orderNumber>
+        <customerOrderNumber>000001</customerOrderNumber>
         <lines>
             <line>
-                <rucLineId/>
                 <lineNumber>1</lineNumber>
-                <priamSku stockType="P">2000122108026</priamSku>
+                <sku>4567</sku>
                 <qtyRequired>1</qtyRequired>
                 <qtyAllocated>1</qtyAllocated>
                 <qtyDespatched>0</qtyDespatched>
@@ -34,9 +15,8 @@
                 <qtyLost>0</qtyLost>
             </line>
             <line>
-                <rucLineId/>
                 <lineNumber>2</lineNumber>
-                <priamSku stockType="P">2000122108033</priamSku>
+                <sku>4568</sku>
                 <qtyRequired>1</qtyRequired>
                 <qtyAllocated>0</qtyAllocated>
                 <qtyDespatched>0</qtyDespatched>
@@ -44,9 +24,7 @@
                 <qtyLost>0</qtyLost>
             </line>
         </lines>
-        <packages>
-        </packages>
-        <userId>STEVE</userId>
-        <userFullName>STEVE GLAZE</userFullName>
+        <userId>aydin</userId>
+        <userFullName>Aydin Hassan</userFullName>
     </order>
 </orderStatus>

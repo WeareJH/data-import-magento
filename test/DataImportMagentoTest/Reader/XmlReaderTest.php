@@ -2,8 +2,6 @@
 
 namespace Jh\DataImportTest\Reader;
 
-
-
 use Jh\DataImportMagento\Reader\XmlReader;
 use Symfony\Component\Config\Definition\Exception\Exception;
 
@@ -25,8 +23,7 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
     {
         $file = new \SplFileObject(__DIR__ . '/../Fixtures/invalid_xml.xml');
 
-        $expectedMessage = "Failed to parse file. Errors: 'Opening and ending tag mismatch: orderStatus line 2"
-         . " and order', 'Extra content at the end of the document'";
+        $expectedMessage = "XML Parsing Failed. Errors: 'Premature end of data in tag orderStatus line 2'";
 
         $this->setExpectedException('Ddeboer\DataImport\Exception\ReaderException', $expectedMessage);
         $this->reader = new XmlReader($file);
@@ -35,98 +32,83 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
     public function testStructureOfDecodedXmlIsValid()
     {
         $file = new \SplFileObject(__DIR__ . '/../Fixtures/valid_xml.xml');
-        $this->reader = new XmlReader($file);
+        $this->reader = new XmlReader($file, array(
+            '//orderStatus/order',
+            'lines/line'
+        ));
 
-        $data = $this->reader->current();
-
-        $expected = array (
-            'order' => array (
-                'clientCode'            => '511',
-                'orderNumber'           => 'OR0000008',
-                'customerOrderNumber'   => '323424324234',
-                'statuses'              => array (
-                    'status' => array (
-                        array (
-                            'statusCode'        => 'APK',
-                            'statusDescription' => 'Awaiting Picking',
-                            'statusDate'        => '2014-06-24T13:14:51.000Z',
-                            'userId'            => 'STEVE',
-                            'documentReference' => array (),
-                            'statusAction'      => 'Added',
-                        ),
-                        array (
-                            'statusCode'        => 'PA',
-                            'statusDescription' => 'Part Allocated',
-                            'statusDate'        => '2014-06-24T13:14:51.000Z',
-                            'userId'            => array (),
-                            'documentReference' => array (),
-                            'statusAction'      => 'Added',
-                        ),
-                    ),
-                ),
-                'lines' => array (
-                    'line' => array (
-                        array (
-                            'rucLineId'         => array (),
-                            'lineNumber'        => '1',
-                            'priamSku'          => '2000122108026',
-                            'qtyRequired'       => '1',
-                            'qtyAllocated'      => '1',
-                            'qtyDespatched'     => '0',
-                            'qtyCancelled'      => '0',
-                            'qtyLost'           => '0',
-                        ),
-                        array (
-                            'rucLineId'         => array (),
-                            'lineNumber'        => '2',
-                            'priamSku'          => '2000122108033',
-                            'qtyRequired'       => '1',
-                            'qtyAllocated'      => '0',
-                            'qtyDespatched'     => '0',
-                            'qtyCancelled'      => '0',
-                            'qtyLost'           => '0',
-                        ),
-                    ),
-                ),
-                'packages'      => array (),
-                'userId'        => 'STEVE',
-                'userFullName'  => 'STEVE GLAZE',
+        $expected = array(
+            array(
+                'clientCode'            => '54',
+                'orderNumber'           => '000001',
+                'customerOrderNumber'   => '000001',
+                'userId'                => 'aydin',
+                'userFullName'          => 'Aydin Hassan',
+                'lineNumber'            => '1',
+                'sku'                   => '4567',
+                'qtyRequired'           => '1',
+                'qtyAllocated'          => '1',
+                'qtyDespatched'         => '0',
+                'qtyCancelled'          => '0',
+                'qtyLost'               => '0',
+            ),
+            array(
+                'clientCode'            => '54',
+                'orderNumber'           => '000001',
+                'customerOrderNumber'   => '000001',
+                'userId'                => 'aydin',
+                'userFullName'          => 'Aydin Hassan',
+                'lineNumber'            => '2',
+                'sku'                   => '4568',
+                'qtyRequired'           => '1',
+                'qtyAllocated'          => '0',
+                'qtyDespatched'         => '0',
+                'qtyCancelled'          => '0',
+                'qtyLost'               => '0',
             ),
         );
 
-        $this->assertEquals($expected, $data);
+        $data = $this->reader->current();
+        $this->assertEquals($expected[0], $data);
+        $this->reader->next();
+        $data = $this->reader->current();
+        $this->assertEquals($expected[1], $data);
     }
 
-    public function testGetFieldsReturnsTopLevelNodes()
+    public function testGetFields()
     {
         $file = new \SplFileObject(__DIR__ . '/../Fixtures/valid_xml.xml');
-        $this->reader = new XmlReader($file);
+        $this->reader = new XmlReader($file, array(
+            '//orderStatus/order',
+            'lines/line'
+        ));
 
-        $this->assertEquals(array('order'), $this->reader->getFields());
+        $fields = array(
+            'clientCode',
+            'orderNumber',
+            'customerOrderNumber',
+            'userId',
+            'userFullName',
+            'lineNumber',
+            'sku',
+            'qtyRequired',
+            'qtyAllocated',
+            'qtyDespatched',
+            'qtyCancelled',
+            'qtyLost',
+        );
+
+        $this->assertEquals($fields, $this->reader->getFields());
     }
 
-    public function testCountReturnsOne()
+    public function testCount()
     {
         $file = new \SplFileObject(__DIR__ . '/../Fixtures/valid_xml.xml');
-        $this->reader = new XmlReader($file);
+        $this->reader = new XmlReader($file, array(
+            '//orderStatus/order',
+            'lines/line'
+        ));
 
-        $this->assertEquals(1, $this->reader->count());
-    }
-
-    public function testKeyIsAlwaysZero()
-    {
-        $file = new \SplFileObject(__DIR__ . '/../Fixtures/valid_xml.xml');
-        $this->reader = new XmlReader($file);
-
-        $this->assertEquals(0, $this->reader->key());
-    }
-
-    public function testValidFunctionReturnsFalseAfterFirstCallOfCurrent()
-    {
-        $file = new \SplFileObject(__DIR__ . '/../Fixtures/valid_xml.xml');
-        $this->reader = new XmlReader($file);
-        $this->assertTrue($this->reader->valid());
-        $this->reader->current();
-        $this->assertFalse($this->reader->valid());
+        $this->assertSame(2, $this->reader->count());
     }
 }

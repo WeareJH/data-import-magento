@@ -2,110 +2,31 @@
 
 namespace Jh\DataImportMagento\Reader;
 
+use AydinHassan\XmlFuse\XmlFuse;
 use Ddeboer\DataImport\Exception\ReaderException;
-use Ddeboer\DataImport\Reader\ReaderInterface;
+use Ddeboer\DataImport\Reader\ArrayReader;
 
 /**
  * Class XmlReader
  * @package Jh\DataImportMagento\Reader
  * @author Aydin Hassan <aydin@wearejh.com>
  */
-class XmlReader implements ReaderInterface
+class XmlReader extends ArrayReader
 {
 
     /**
-     * @var \SplFileObject
-     */
-    protected $file;
-
-    /**
-     * @var array
-     */
-    protected $data;
-
-    /**
-     * @var bool
-     */
-    protected $dataSent = false;
-
-    /**
      * @param \SplFileObject $file
+     * @param array $xPaths
      */
-    public function __construct(\SplFileObject $file)
+    public function __construct(\SplFileObject $file, array $xPaths = array())
     {
-        libxml_use_internal_errors(true);
-        $xml = simplexml_load_file($file->getPathname());
-
-        if (false === $xml) {
-            throw new ReaderException(
-                sprintf(
-                    "Failed to parse file. Errors: '%s'",
-                    implode(
-                        "', '",
-                        array_map(function ($error) {
-                            return trim($error->message);
-                        }, libxml_get_errors())
-                    )
-                )
-            );
+        $fileContents   = file_get_contents($file->getPathname());
+        try {
+            $xmlFuse = new XmlFuse($fileContents, $xPaths);
+        } catch (\UnexpectedValueException $e) {
+            throw new ReaderException($e->getMessage(), 0, $e);
         }
 
-        //hack to decode XML to array
-        $this->data = json_decode(json_encode($xml), true);
-    }
-
-    /**
-     * @return array
-     */
-    public function current()
-    {
-        $this->dataSent = true;
-        return $this->data;
-    }
-
-    /**
-     * @return void
-     */
-    public function next()
-    {
-    }
-
-    /**
-     * @return int
-     */
-    public function key()
-    {
-        return 0;
-    }
-
-    /**
-     * @return bool
-     */
-    public function valid()
-    {
-        return !$this->dataSent;
-    }
-
-    /**
-     * @return void
-     */
-    public function rewind()
-    {
-    }
-
-    /**
-     * @return array
-     */
-    public function getFields()
-    {
-        return array_keys($this->data);
-    }
-
-    /**
-     * @return int
-     */
-    public function count()
-    {
-        return 1;
+        parent::__construct($xmlFuse->parse());
     }
 }
