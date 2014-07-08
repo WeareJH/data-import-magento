@@ -211,19 +211,11 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->method('setData')
             ->with($data);
 
-        $productResource = $this->getMockBuilder('\Mage_Catalog_Model_Resource_Product')
-            ->disableOriginalConstructor()
-            ->getMock();
+
 
         $this->productModel
-             ->expects($this->once())
-             ->method('getResource')
-             ->will($this->returnValue($productResource));
-
-        $productResource
             ->expects($this->once())
-            ->method('save')
-            ->with($this->productModel);
+            ->method('save');
 
         $this->productWriter->writeItem($data);
     }
@@ -248,20 +240,11 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->method('setData')
             ->with($data);
 
-        $productResource = $this->getMockBuilder('\Mage_Catalog_Model_Resource_Product')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->productModel
-            ->expects($this->once())
-            ->method('getResource')
-            ->will($this->returnValue($productResource));
 
         $e = new \Mage_Customer_Exception("Save Failed");
-        $productResource
+        $this->productModel
             ->expects($this->once())
             ->method('save')
-            ->with($this->productModel)
             ->will($this->throwException($e));
 
         $this->setExpectedException('Jh\DataImportMagento\Exception\MagentoSaveException', 'Save Failed');
@@ -300,20 +283,10 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->method('setData')
             ->with($expected);
 
-        $productResource = $this->getMockBuilder('\Mage_Catalog_Model_Resource_Product')
-            ->disableOriginalConstructor()
-            ->getMock();
-
+        $e = new \Mage_Customer_Exception("Save Failed");
         $this->productModel
             ->expects($this->once())
-            ->method('getResource')
-            ->will($this->returnValue($productResource));
-
-        $e = new \Mage_Customer_Exception("Save Failed");
-        $productResource
-            ->expects($this->once())
             ->method('save')
-            ->with($this->productModel)
             ->will($this->throwException($e));
 
         $this->setExpectedException('Jh\DataImportMagento\Exception\MagentoSaveException', 'Save Failed');
