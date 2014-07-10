@@ -97,11 +97,10 @@ class ProductWriter extends AbstractWriter
             'weight'        => '0',
             'status'        => '1',
             'tax_class_id'  => 2,   //Taxable Goods Tax Class
-            'website_ids'   => '1',
+            'website_ids'   => [1],
             'type_id'       => 'simple'
         ];
     }
-
 
     /**
      * @param string $attrCode
