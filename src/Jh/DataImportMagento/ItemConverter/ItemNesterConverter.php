@@ -58,7 +58,12 @@ class ItemNesterConverter implements ItemConverterInterface
         $data = array();
         foreach ($this->mappings as $from => $remove) {
 
-            $data[$from] = $input[$from];
+            if (isset($input[$from])) {
+                $data[$from] = $input[$from];
+            } else {
+                $data[$from] = null;
+            }
+
 
             if ($remove) {
                 unset($input[$from]);
