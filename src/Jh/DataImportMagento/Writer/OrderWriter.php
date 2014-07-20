@@ -260,6 +260,10 @@ class OrderWriter extends AbstractWriter
      */
     public function calculateTaxPercentage($price, $taxAmount)
     {
+
+        if (0 === (int) $taxAmount) {
+            return 0;
+        }
         return round((100 / $price) * $taxAmount, 1);
     }
 
@@ -312,7 +316,8 @@ class OrderWriter extends AbstractWriter
             $item[$this->customerMappingAttribute]
         );
 
-        if (!$customer) {
+
+        if (!$customer->getId()) {
             throw new WriterException(
                 sprintf(
                     'Customer could not be found. Using field "%s" with value "%s"',
@@ -320,6 +325,10 @@ class OrderWriter extends AbstractWriter
                     $item[$this->customerMappingAttribute]
                 )
             );
+        }
+
+        if (!count($item['items'])) {
+            throw new WriterException(sprintf('No Order Items for Order: "%s"', $item['increment_id']));
         }
 
         $this->addCustomerToQuote($quote, $customer);
