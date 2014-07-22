@@ -3,6 +3,7 @@
 namespace Jh\DataImportTest\Reader;
 
 use Jh\DataImportMagento\Reader\XmlReader;
+use MyProject\Proxies\__CG__\OtherProject\Proxies\__CG__\stdClass;
 use Symfony\Component\Config\Definition\Exception\Exception;
 
 class XmlReaderTest extends \PHPUnit_Framework_TestCase
@@ -32,10 +33,14 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
     public function testStructureOfDecodedXmlIsValid()
     {
         $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r+");
-        $this->reader = new XmlReader($file, array(
-            '//orderStatus/order',
-            'lines/line'
-        ));
+        $this->reader = new XmlReader(
+            $file,
+            [
+                '//orderStatus/order',
+                'lines/line',
+            ],
+            'merge'
+        );
 
         $expected = array(
             array(
@@ -78,10 +83,14 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
     public function testGetFields()
     {
         $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r+");
-        $this->reader = new XmlReader($file, array(
-            '//orderStatus/order',
-            'lines/line'
-        ));
+        $this->reader = new XmlReader(
+            $file,
+            [
+                '//orderStatus/order',
+                'lines/line'
+            ],
+            'merge'
+        );
 
         $fields = array(
             'clientCode',
@@ -104,11 +113,37 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
     public function testCount()
     {
         $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r+");
-        $this->reader = new XmlReader($file, array(
-            '//orderStatus/order',
-            'lines/line'
-        ));
+        $this->reader = new XmlReader(
+            $file,
+            [
+                '//orderStatus/order',
+                'lines/line',
+            ],
+            'merge'
+        );
 
         $this->assertSame(2, $this->reader->count());
+    }
+
+    public function testExceptionIsThrownIsResourceIsNotAResource()
+    {
+        $this->setExpectedException(
+            'InvalidArgumentException',
+            'Expected argument to be a stream resource, got "stdClass"'
+        );
+
+        new XmlReader(new \stdClass);
+    }
+
+    public function testExceptionIsThrownIfUnrecognizedType()
+    {
+        $this->setExpectedException(
+            'InvalidArgumentException',
+            "'notatype' is not a valid type. Valid types are 'nest', 'merge'"
+        );
+
+        $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r+");
+        new XmlReader($file, [], 'notatype');
+
     }
 }

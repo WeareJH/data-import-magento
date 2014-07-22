@@ -175,4 +175,25 @@ class ItemNestConverterTest extends \PHPUnit_Framework_TestCase
         $itemConvert = new ItemNesterConverter($mappings, 'nested');
         $itemConvert->convert($input);
     }
+
+    public function testIfInputDataMissingNullIsSet()
+    {
+        $mappings = [
+            ['nestMe1' => false],
+            ['nestMe2' => true],
+        ];
+
+        $input = [
+            'nestMe2' => 'someValue2',
+        ];
+
+        $itemConvert = new ItemNesterConverter($mappings, 'nested', false);
+        $data = $itemConvert->convert($input);
+
+        $expected = [
+            'nested' => ['nestMe1' => null, 'nestMe2' => 'someValue2']
+        ];
+
+        $this->assertEquals($expected, $data);
+    }
 }
