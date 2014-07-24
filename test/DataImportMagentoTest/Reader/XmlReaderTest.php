@@ -139,7 +139,7 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
     {
         $this->setExpectedException(
             'InvalidArgumentException',
-            "'notatype' is not a valid type. Valid types are 'nest', 'merge'"
+            'Type: "notatype" is not supported. Valid types are: "merge, nest"'
         );
 
         $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r+");

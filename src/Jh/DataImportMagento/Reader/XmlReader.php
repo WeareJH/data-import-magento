@@ -34,23 +34,11 @@ class XmlReader extends ArrayReader
 
         $xml = stream_get_contents($stream);
         try {
-            switch($type) {
-                case 'nest':
-                    $xmlParser = new XmlNest($xml, $xPaths);
-                    break;
-                case 'merge':
-                    $xmlParser = new XmlFuse($xml, $xPaths);
-                    break;
-                default:
-                    throw new \InvalidArgumentException(
-                        sprintf("'%s' is not a valid type. Valid types are 'nest', 'merge'", $type)
-                    );
-            }
-
+            $parser = XmlFuse::factory($type, $xml, $xPaths);
         } catch (\UnexpectedValueException $e) {
             throw new ReaderException($e->getMessage(), 0, $e);
         }
 
-        parent::__construct($xmlParser->parse());
+        parent::__construct($parser->parse());
     }
 }

@@ -4,20 +4,20 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "5a253f100ee88fd73979c5e148b40649",
+    "hash": "c33a4a4bd42ae8a4a87c308dd66c2830",
     "packages": [
         {
             "name": "aydin-hassan/xml-fuse",
-            "version": "dev-master",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/AydinHassan/XmlFuse.git",
-                "reference": "61ed42a521dfc450ea302762a50731fdbc2fecec"
+                "reference": "5674f3e462056dbe7f80fcfca153b33319878c5a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/AydinHassan/XmlFuse/zipball/61ed42a521dfc450ea302762a50731fdbc2fecec",
-                "reference": "61ed42a521dfc450ea302762a50731fdbc2fecec",
+                "url": "https://api.github.com/repos/AydinHassan/XmlFuse/zipball/5674f3e462056dbe7f80fcfca153b33319878c5a",
+                "reference": "5674f3e462056dbe7f80fcfca153b33319878c5a",
                 "shasum": ""
             },
             "require": {
@@ -45,7 +45,7 @@
                 }
             ],
             "description": "Small Library to turn merge data using XPaths",
-            "time": "2014-07-22 13:20:20"
+            "time": "2014-07-24 23:02:29"
         },
         {
             "name": "ddeboer/data-import",
@@ -53,12 +53,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ddeboer/data-import.git",
-                "reference": "0fe6fc16b2ab1a76d7afe8410ca0461ebc7637dd"
+                "reference": "d58d326fa244b314b87b4d2f63287acadb7863c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ddeboer/data-import/zipball/0fe6fc16b2ab1a76d7afe8410ca0461ebc7637dd",
-                "reference": "0fe6fc16b2ab1a76d7afe8410ca0461ebc7637dd",
+                "url": "https://api.github.com/repos/ddeboer/data-import/zipball/d58d326fa244b314b87b4d2f63287acadb7863c5",
+                "reference": "d58d326fa244b314b87b4d2f63287acadb7863c5",
                 "shasum": ""
             },
             "require": {
@@ -114,7 +114,7 @@
                 "export",
                 "import"
             ],
-            "time": "2014-07-22 11:45:16"
+            "time": "2014-07-23 07:59:21"
         },
         {
             "name": "psr/log",
@@ -1371,9 +1371,9 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "ddeboer/data-import": 20,
-        "aydin-hassan/xml-fuse": 20,
         "satooshi/php-coveralls": 20
     },
+    "prefer-stable": false,
     "platform": {
         "php": ">=5.3.0"
     },
