@@ -38,7 +38,7 @@ class ProductUpdateAttributeWriter extends AbstractWriter
             return;
         }
 
-        $product->setData($item);
+        $product->addData($item);
 
         try {
             $product->save();
