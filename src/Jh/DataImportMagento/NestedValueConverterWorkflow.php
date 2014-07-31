@@ -88,38 +88,34 @@ class NestedValueConverterWorkflow extends Workflow
     protected function recursivelyConvertValues(array $properties, array $data, array $converters)
     {
         $property = array_shift($properties);
+        $isCollection = false;
+        if (substr($property, -2) === "[]") {
+            $isCollection = true;
+            $property = substr($property, 0, -2);
+        }
 
         if (!count($properties)) {
             //this is the deepest field
 
-            //This is an associative array
             if (isset($data[$property]) || array_key_exists($property, $data)) {
+                //This is an associative array
                 foreach ($converters as $converter) {
                     $data[$property] = $converter->convert($data[$property]);
                 }
-            //This is a nested array
-            } else {
-                //try looping nested arrays
-                foreach ($data as $key => $nestedItem) {
-                    foreach ($converters as $converter) {
-                        if (isset($nestedItem[$property]) || array_key_exists($property, $nestedItem)) {
-                            $data[$key][$property] = $converter->convert($nestedItem[$property]);
-                        }
-                    }
-                }
             }
         } else {
-            //this is an associative array - so call self
+
             if (isset($data[$property])) {
-                $data[$property] = $this->recursivelyConvertValues($properties, $data[$property], $converters);
-            //this is a nested array so call self with each nested array
-            } else {
-                foreach ($data as $key => $item) {
-                    $data[$key] = $this->recursivelyConvertValues($properties, $item, $converters);
+                if ($isCollection) {
+                    foreach ($data[$property] as $key => $item) {
+                        $data[$property][$key] = $this->recursivelyConvertValues($properties, $item, $converters);
+                    }
+
+                } else {
+                    $data[$property] = $this->recursivelyConvertValues($properties, $data[$property], $converters);
                 }
             }
         }
-
         return $data;
     }
 }
