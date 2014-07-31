@@ -55,7 +55,7 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($valueConverter, $converters['first'][0]);
     }
 
-    public function testValueConverterOnNonNestedProperties()
+    public function testValueConverterOnArray()
     {
         $workflow       = $this->getWorkflow();
         $valueConverter = new CallbackValueConverter(function () {
@@ -122,7 +122,7 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $convertedItem);
     }
 
-    public function testValueConverterOnNestedArray()
+    public function testValueConverterOnCollection()
     {
         $workflow       = $this->getWorkflow();
         $valueConverter = new CallbackValueConverter(function () {
@@ -131,8 +131,8 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
 
         $workflow->addValueConverter(
             [
-                'name/first',
-                'name/last',
+                'name[]/first',
+                'name[]/last',
             ],
             $valueConverter
         );
@@ -180,7 +180,7 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
 
         $workflow->addValueConverter(
             [
-                'name/nothere',
+                'name[]/nothere',
             ],
             $valueConverter
         );
@@ -219,7 +219,7 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $convertedItem);
     }
 
-    public function testValueConverterIgnoresKeyStructureWhichDoesNotExist2()
+    public function testValueConverterIgnoresKeyStructureWhichDoesNotExistAtRoot()
     {
         $workflow       = $this->getWorkflow();
         $valueConverter = new CallbackValueConverter(function () {
@@ -228,7 +228,7 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
 
         $workflow->addValueConverter(
             [
-                'nothere/nothere',
+                'nothereroot/nothere',
             ],
             $valueConverter
         );
@@ -267,7 +267,7 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $convertedItem);
     }
 
-    public function testValueConverterOnDoubleNestedProperties()
+    public function testValueConverterOnDoubleNestedArray()
     {
         $workflow       = $this->getWorkflow();
         $valueConverter = new CallbackValueConverter(function () {
@@ -308,7 +308,7 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $convertedItem);
     }
 
-    public function testValueConverterOnDoubleNestedArrayProperties()
+    public function testValueConverterOnNestedCollection()
     {
         $workflow       = $this->getWorkflow();
         $valueConverter = new CallbackValueConverter(function () {
@@ -317,8 +317,8 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
 
         $workflow->addValueConverter(
             [
-                'addresses/street/street1',
-                'addresses/street/street2',
+                'addresses[]/street/street1',
+                'addresses[]/street/street2',
             ],
             $valueConverter
         );
@@ -365,22 +365,74 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $convertedItem);
     }
 
+    public function testValueConverterOnDoubleNestedArrayProperties2()
+    {
+        $workflow       = $this->getWorkflow();
+        $valueConverter = new CallbackValueConverter(function () {
+            return 'convertedValue';
+        });
+
+        $workflow->addValueConverter(
+            [
+                'addresses[]/streets[]/name',
+            ],
+            $valueConverter
+        );
+
+        $method = new \ReflectionMethod($workflow, 'convertItem');
+        $method->setAccessible(true);
+
+        $data = [
+            'addresses' => [
+                [
+                    'streets' => [
+                        [
+                            'name' => 'Barton Court',
+                        ],
+                        [
+                            'name' => 'Barton Court',
+                        ]
+                    ],
+                ],
+            ],
+        ];
+
+        $convertedItem = $method->invoke($workflow, $data);
+
+        $expected = [
+            'addresses' => [
+                [
+                    'streets' => [
+                        [
+                            'name' => 'convertedValue',
+                        ],
+                        [
+                            'name' => 'convertedValue',
+                        ]
+                    ],
+                ],
+            ],
+        ];
+
+        $this->assertSame($expected, $convertedItem);
+    }
+
     protected function getWorkflow()
     {
-        $reader = new ArrayReader(array(
-            array(
+        $reader = new ArrayReader([
+            [
                 'first' => 'James',
                 'last'  => 'Bond'
-            ),
-            array(
+            ],
+            [
                 'first' => 'Miss',
                 'last'  => 'Moneypenny'
-            ),
-            array(
+            ],
+            [
                 'first' => null,
                 'last'  => 'Doe'
-            )
-        ));
+            ]
+        ]);
 
         return new NestedValueConverterWorkflow($reader);
     }

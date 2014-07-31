@@ -53,12 +53,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ddeboer/data-import.git",
-                "reference": "d58d326fa244b314b87b4d2f63287acadb7863c5"
+                "reference": "72d4f9315600eb2e5ec2b8688b3bdd5e00dc2ef5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ddeboer/data-import/zipball/d58d326fa244b314b87b4d2f63287acadb7863c5",
-                "reference": "d58d326fa244b314b87b4d2f63287acadb7863c5",
+                "url": "https://api.github.com/repos/ddeboer/data-import/zipball/72d4f9315600eb2e5ec2b8688b3bdd5e00dc2ef5",
+                "reference": "72d4f9315600eb2e5ec2b8688b3bdd5e00dc2ef5",
                 "shasum": ""
             },
             "require": {
@@ -114,7 +114,7 @@
                 "export",
                 "import"
             ],
-            "time": "2014-07-23 07:59:21"
+            "time": "2014-07-28 11:57:13"
         },
         {
             "name": "psr/log",
