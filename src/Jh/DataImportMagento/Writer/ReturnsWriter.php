@@ -72,13 +72,19 @@ class ReturnsWriter extends AbstractWriter
             );
         }
 
-        /** @var \Mage_Sales_Model_Order_Creditmemo $creditMemo */
-        $creditMemo = $service->prepareCreditmemo([
-            'qtys'              => $returnQuantities,
-            //TODO: Make this configurable - have an option whether to refund shipping or not
-            //TODO: if yes, then grab the amount from the input data
-            'shipping_amount'   => 0,
-        ]);
+        try {
+            /** @var \Mage_Sales_Model_Order_Creditmemo $creditMemo */
+            $creditMemo = $service->prepareCreditmemo([
+                'qtys'              => $returnQuantities,
+                //TODO: Make this configurable - have an option whether to refund shipping or not
+                //TODO: if yes, then grab the amount from the input data
+                'shipping_amount'   => 0,
+            ]);
+        } catch (\Mage_Core_Exception $e) {
+            //Probably something to do trying to refund
+            //quantities which don't add up
+            throw new MagentoSaveException($e->getMessage());
+        }
 
         //don't actually perform refund.
         //TODO: Make this configurable ^
@@ -98,6 +104,15 @@ class ReturnsWriter extends AbstractWriter
                 ->addObject($creditMemo)
                 ->addObject($creditMemo->getOrder())
                 ->save();
+
+            //if there is a custom status for the order
+            //set it - we do it here, because somewhere in the save process
+            //Magento sets the order to complete.
+            if (isset($item['orderStatus'])) {
+                //$order->setStatus(strtolower($item['orderStatus']));
+                $order->addStatusHistoryComment("Returned", strtolower($item['orderStatus']));
+                $order->save();
+            }
 
         } catch (\Exception $e) {
             throw new MagentoSaveException($e->getMessage());
