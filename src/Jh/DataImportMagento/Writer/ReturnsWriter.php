@@ -27,7 +27,8 @@ class ReturnsWriter extends AbstractWriter
      * @var array
      */
     protected $options = [
-        'order_id_field' => 'increment_id',
+        'order_id_field'            => 'increment_id',
+        'send_credit_memo_email'    => true,
     ];
 
     /**
@@ -116,6 +117,10 @@ class ReturnsWriter extends AbstractWriter
 
         } catch (\Exception $e) {
             throw new MagentoSaveException($e->getMessage());
+        }
+
+        if ($this->options['send_credit_memo_email']) {
+            $creditMemo->sendEmail(true);
         }
     }
 
