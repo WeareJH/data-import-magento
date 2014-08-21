@@ -170,9 +170,14 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(1));
 
         $this->stockItemModel
-            ->expects($this->once())
+            ->expects($this->at(2))
             ->method('setData')
             ->with('qty', 10);
+
+        $this->stockItemModel
+            ->expects($this->at(4))
+            ->method('setData')
+            ->with('is_in_stock', 1);
 
         $this->stockItemModel
             ->expects($this->once())
@@ -206,9 +211,14 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(5));
 
         $this->stockItemModel
-            ->expects($this->once())
+            ->expects($this->at(3))
             ->method('setData')
             ->with('qty', 15);
+
+        $this->stockItemModel
+            ->expects($this->at(5))
+            ->method('setData')
+            ->with('is_in_stock', 1);
 
         $this->stockItemModel
             ->expects($this->once())
