@@ -38,6 +38,7 @@ class InventoryUpdateWriter extends AbstractWriter
     protected $options = [
         'productIdField'    => 'sku',
         'stockUpdateType'   => self::STOCK_UPDATE_TYPE_SET,
+        'updateStockStatusIfInStock'    => true
     ];
 
     /**
@@ -153,6 +154,13 @@ class InventoryUpdateWriter extends AbstractWriter
             case self::STOCK_UPDATE_TYPE_SET:
                 $stockItem->setData('qty', $item['qty']);
                 break;
+        }
+
+        if ($this->options['updateStockStatusIfInStock']) {
+            // set item to in stock if the new qty matches or is greater than min qty in the config
+            if ($item['qty'] >= $stockItem->getMinQty()) {
+                $stockItem->setData('is_in_stock', 1);
+            }
         }
 
         try {
