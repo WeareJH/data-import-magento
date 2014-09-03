@@ -212,7 +212,9 @@ class ReturnsWriter extends AbstractWriter
         foreach ($items as $item) {
             $orderItem = $order->getItemsCollection()->getItemByColumnValue('sku', $item['sku']);
             if (null === $orderItem) {
-                throw new WriterException('Item with SKU: "%s" does not exist in Order: "%s"', $item['sku']);
+                throw new WriterException(
+                    sprintf('Item with SKU: "%s" does not exist in Order: "%s"', $item['sku'], $order->getIncrementId())
+                );
             }
 
             $return[$orderItem->getId()] = $item['qty'];
