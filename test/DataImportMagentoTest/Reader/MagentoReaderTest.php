@@ -154,4 +154,49 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
             $i++;
         }
     }
+
+    public function testReaderReturnsAllDataIfCollectionSizeIsWrong()
+    {
+        $this->collection
+            ->expects($this->once())
+            ->method('getSelect')
+            ->will($this->returnValue($this->select));
+
+        $this->collection
+            ->expects($this->once())
+            ->method('getSize')
+            ->will($this->returnValue(1));
+
+        $this->reader = new MagentoReader($this->collection);
+        $statement = $this->getMock('\Zend_Db_Statement_Interface');
+        $this->select
+            ->expects($this->once())
+            ->method('query')
+            ->will($this->returnValue($statement));
+
+        $data = array(
+            array('one' => 1, 'two' => 2, 'three' => 3),
+            array('one' => 11, 'two' => 22, 'three' => 33),
+            array('one' => 111, 'two' => 222, 'three' => 333),
+        );
+
+        $statement->expects($this->at(0))
+            ->method('fetch')
+            ->will($this->returnValue($data[0]));
+
+        $statement->expects($this->at(1))
+            ->method('fetch')
+            ->will($this->returnValue($data[1]));
+
+        $statement->expects($this->at(2))
+            ->method('fetch')
+            ->will($this->returnValue($data[2]));
+
+        $i = 1;
+        foreach ($this->reader as $key => $row) {
+            $this->assertEquals($i, $key);
+            $this->assertEquals($data[$i - 1], $row);
+            $i++;
+        }
+    }
 }
