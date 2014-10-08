@@ -71,7 +71,6 @@ class InventoryUpdateWriter extends AbstractWriter
             }
         }
         $this->options = $this->parseOptions($this->options, $options);
-        //var_dump($this->options);
     }
 
     /**
