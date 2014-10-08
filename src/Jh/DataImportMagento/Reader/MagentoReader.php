@@ -98,7 +98,7 @@ class MagentoReader implements ReaderInterface
          * seems to fix it but is hard to patch. This simple check should return false
          * if the row if null
          */
-        return $this->current <= $this->count() && $this->data;
+        return $this->current <= $this->count() || $this->data;
     }
 
     /**

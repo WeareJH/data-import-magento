@@ -43,4 +43,22 @@ class AttributeOptionValueConverterTest extends \PHPUnit_Framework_TestCase
 
         $this->converter->convert(6);
     }
+
+    public function testConverterReturnsEmptyStringIfOptionNotFound()
+    {
+        $attributeCode = 'colour';
+        $options = array(
+            '1' => 'Red',
+            '2' => 'Purple',
+            '3' => 'Orange',
+            '4' => 'Green',
+        );
+
+        $this->converter = new AttributeOptionValueConverter($attributeCode, $options, [
+            'returnEmptyStringIfOptionNotExist' => true
+        ]);
+
+        $this->assertEquals('', $this->converter->convert(6));
+
+    }
 }

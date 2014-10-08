@@ -4,6 +4,7 @@ namespace Jh\DataImportMagento\ValueConverter;
 
 use Ddeboer\DataImport\ValueConverter\ValueConverterInterface;
 use Ddeboer\DataImport\Exception\UnexpectedValueException;
+use Jh\DataImportMagento\Options\OptionsParseTrait;
 
 /**
  * Load the real Option Label for a given ID
@@ -14,10 +15,7 @@ use Ddeboer\DataImport\Exception\UnexpectedValueException;
  */
 class AttributeOptionValueConverter implements ValueConverterInterface
 {
-    /**
-     * @var array
-     */
-    protected $options = array();
+    use OptionsParseTrait;
 
     /**
      * @var string|null
@@ -25,12 +23,25 @@ class AttributeOptionValueConverter implements ValueConverterInterface
     protected $attributeCode = null;
 
     /**
+     * @var array
+     */
+    protected $options = [
+        'returnEmptyStringIfOptionNotExist' => false,
+    ];
+
+    /**
+     * @var array
+     */
+    protected $attributeOptions = [];
+
+    /**
      * @param array $options
      */
-    public function __construct($attributeCode, $options = array())
+    public function __construct($attributeCode, $attributeOptions = [], $options = [])
     {
         $this->attributeCode    = $attributeCode;
-        $this->options          = $options;
+        $this->attributeOptions = $attributeOptions;
+        $this->options          = $this->parseOptions($this->options, $options);
     }
 
     /**
@@ -40,16 +51,20 @@ class AttributeOptionValueConverter implements ValueConverterInterface
      */
     public function convert($input)
     {
-        if (!array_key_exists($input, $this->options)) {
-            throw new UnexpectedValueException(
-                sprintf(
-                    '"%s" does not appear to be a valid attribute option for "%s"',
-                    $input,
-                    $this->attributeCode
-                )
-            );
+        if (!array_key_exists($input, $this->attributeOptions)) {
+            if (!$this->options['returnEmptyStringIfOptionNotExist']) {
+                throw new UnexpectedValueException(
+                    sprintf(
+                        '"%s" does not appear to be a valid attribute option for "%s"',
+                        $input,
+                        $this->attributeCode
+                    )
+                );
+            } else {
+                return '';
+            }
         }
         //look up the real option value
-        return $this->options[$input];
+        return $this->attributeOptions[$input];
     }
 }
