@@ -117,11 +117,6 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
             ->method('getSelect')
             ->will($this->returnValue($this->select));
 
-        $this->collection
-            ->expects($this->once())
-            ->method('getSize')
-            ->will($this->returnValue(3));
-
         $this->reader = new MagentoReader($this->collection);
         $statement = $this->getMock('\Zend_Db_Statement_Interface');
         $this->select
@@ -161,11 +156,6 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
             ->expects($this->once())
             ->method('getSelect')
             ->will($this->returnValue($this->select));
-
-        $this->collection
-            ->expects($this->once())
-            ->method('getSize')
-            ->will($this->returnValue(1));
 
         $this->reader = new MagentoReader($this->collection);
         $statement = $this->getMock('\Zend_Db_Statement_Interface');
