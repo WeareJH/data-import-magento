@@ -97,7 +97,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
              ->will($this->returnValue($attribute));
 
         $this->attrSrcModel
-             ->expects($this->once())
+             ->expects($this->exactly(2))
              ->method('setAttribute')
              ->with($attribute);
 
@@ -107,11 +107,22 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->with(false)
             ->will($this->returnValue($options));
 
+        $this->attrSrcModel
+            ->expects($this->once())
+            ->method('getOptionId')
+            ->with('option3')
+            ->will($this->returnValue('code3'));
+
         $data = array(
             'value' => array(
                 'option' => array('option3', 'option3')
             )
         );
+
+        $attribute
+            ->expects($this->once())
+            ->method('usesSource')
+            ->will($this->returnValue(true));
 
         $attribute
             ->expects($this->once())
@@ -123,7 +134,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->method('save');
 
         $ret = $this->productWriter->getAttrCodeCreateIfNotExist('code3', 'option3');
-        $this->assertEquals($ret, 'option3');
+        $this->assertEquals($ret, 'code3');
     }
 
     public function testGetAttributeReturnsIdIfItExists()
@@ -159,6 +170,11 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue($options));
 
         $attribute
+            ->expects($this->once())
+            ->method('usesSource')
+            ->will($this->returnValue(true));
+
+        $attribute
             ->expects($this->never())
             ->method('setData');
 
@@ -168,6 +184,47 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
 
         $ret = $this->productWriter->getAttrCodeCreateIfNotExist('code2', 'option2');
         $this->assertEquals($ret, 'code2');
+    }
+
+    public function testGetAttributeReturnsValueIfAttributeDoesNotUseSource()
+    {
+        $attribute = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
+
+        $this->attrModel
+            ->expects($this->once())
+            ->method('getIdByCode')
+            ->with('catalog_product', 'attribute_code')
+            ->will($this->returnValue(1));
+
+        $this->attrModel
+            ->expects($this->once())
+            ->method('load')
+            ->with(1)
+            ->will($this->returnValue($attribute));
+
+        $attribute
+            ->expects($this->once())
+            ->method('usesSource')
+            ->will($this->returnValue(false));
+
+        $ret = $this->productWriter->getAttrCodeCreateIfNotExist('attribute_code', 'some_value');
+        $this->assertEquals($ret, 'some_value');
+    }
+
+    public function testGetAttributeThrowsExceptionIfAttributeDoesNotExist()
+    {
+        $this->setExpectedException(
+            'Jh\DataImportMagento\Exception\AttributeNotExistException',
+            'Attribute with code: "not_here" does not exist'
+        );
+
+        $this->attrModel
+            ->expects($this->once())
+            ->method('getIdByCode')
+            ->with('catalog_product', 'not_here')
+            ->will($this->returnValue(false));
+
+        $this->productWriter->getAttrCodeCreateIfNotExist('not_here', 'some_value');
     }
 
     public function testPrepareMethodSetsUpDataCorrectly()
