@@ -3,6 +3,7 @@
 namespace Jh\DataImportMagento\Writer;
 
 use Ddeboer\DataImport\Writer\AbstractWriter;
+use Jh\DataImportMagento\Exception\AttributeNotExistException;
 use Jh\DataImportMagento\Exception\MagentoSaveException;
 
 /**
@@ -105,7 +106,9 @@ class ProductWriter extends AbstractWriter
     /**
      * @param string $attrCode
      * @param string $attrValue
+     *
      * @return string
+     * @throws AttributeNotExistException
      */
     public function getAttrCodeCreateIfNotExist($attrCode, $attrValue)
     {
@@ -113,9 +116,19 @@ class ProductWriter extends AbstractWriter
         $attributeOptionsModel  = clone $this->eavAttrSrcModel;
 
         $attributeId            = $attrModel->getIdByCode('catalog_product', $attrCode);
-        $attribute              = $attrModel->load($attributeId);
+
+        if (false === $attributeId) {
+            throw new AttributeNotExistException($attrCode);
+        }
+
+        $attribute = $attrModel->load($attributeId);
+
+        if (!$attribute->usesSource()) {
+            return $attrValue;
+        }
+
         $attributeOptionsModel->setAttribute($attribute);
-        $options                = $attributeOptionsModel->getAllOptions(false);
+        $options = $attributeOptionsModel->getAllOptions(false);
 
         foreach ($options as $option) {
             if (strtolower($option['label']) == strtolower($attrValue)) {
@@ -126,14 +139,16 @@ class ProductWriter extends AbstractWriter
         //not found - create it
         $attribute->setData('option', array(
             'value' => array(
-                'option' => array(strtolower($attrValue), $attrValue)
+                'option' => array($attrValue, $attrValue)
             )
         ));
         $attribute->save();
 
-        //return the key of the attribute option
-        //equivalent to $option['value'] <- stupidly named by Magento
-        return strtolower($attrValue);
+        $attributeOptionsModel  = clone $this->eavAttrSrcModel;
+        $attributeOptionsModel->setAttribute($attribute);
+        $id = $attributeOptionsModel->getOptionId(strtolower($attrValue));
+
+        return $id;
     }
 
     /**
