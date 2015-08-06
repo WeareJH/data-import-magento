@@ -5,6 +5,8 @@ namespace Jh\DataImportMagento\Writer;
 use Ddeboer\DataImport\Writer\AbstractWriter;
 use Jh\DataImportMagento\Exception\AttributeNotExistException;
 use Jh\DataImportMagento\Exception\MagentoSaveException;
+use Jh\DataImportMagento\Service\ConfigurableProductService;
+use Jh\DataImportMagento\Service\RemoteImageImporter;
 
 /**
  * Class ProductWriter
@@ -45,18 +47,33 @@ class ProductWriter extends AbstractWriter
     protected $defaultStockData = array();
 
     /**
-     * @param \Mage_Catalog_Model_Product $productModel
-     * @param \Mage_Eav_Model_Entity_Attribute $eavAttrModel
+     * @var RemoteImageImporter
+     */
+    protected $remoteImageImporter;
+
+    /**
+     * @var ConfigurableProductService
+     */
+    protected $configurableProductService;
+
+    /**
+     * @param \Mage_Catalog_Model_Product                   $productModel
+     * @param \Mage_Eav_Model_Entity_Attribute              $eavAttrModel
      * @param \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
+     * @param RemoteImageImporter                           $remoteImageImporter
      */
     public function __construct(
         \Mage_Catalog_Model_Product $productModel,
         \Mage_Eav_Model_Entity_Attribute $eavAttrModel,
-        \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
+        \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel,
+        RemoteImageImporter $remoteImageImporter
     ) {
-        $this->productModel     = $productModel;
-        $this->eavAttrModel     = $eavAttrModel;
-        $this->eavAttrSrcModel  = $eavAttrSrcModel;
+        $this->productModel                 = $productModel;
+        $this->eavAttrModel                 = $eavAttrModel;
+        $this->eavAttrSrcModel              = $eavAttrSrcModel;
+        $this->remoteImageImporter          = $remoteImageImporter;
+        //TODO: Move this outside, create a factory for this class
+        $this->configurableProductService   = new ConfigurableProductService;
     }
 
     /**
@@ -104,6 +121,8 @@ class ProductWriter extends AbstractWriter
     }
 
     /**
+     * TODO: Move to AttributeService
+     *
      * @param string $attrCode
      * @param string $attrValue
      *
@@ -181,10 +200,39 @@ class ProductWriter extends AbstractWriter
             $this->processAttributes($item['attributes'], $product);
         }
 
+        if (isset($item['type_id']) && $item['type_id'] === 'configurable') {
+            $this->setupConfigurableProduct($product, $item['configurableAttributes']);
+        }
+
         try {
-            $product->save($product);
-        } catch (\Mage_Core_Exception $e) {
+            $product->save();
+        } catch (\Exception $e) {
             throw new MagentoSaveException($e);
+        }
+
+        if (
+            isset($item['type_id']) &&
+            $item['type_id'] === 'simple' &&
+            isset($item['configurableAttributes']) &&
+            isset($item['parent_sku'])
+        ) {
+            try {
+                $this->configurableProductService
+                    ->assignSimpleProductToConfigurable(
+                        $product,
+                        $item['configurableAttributes'],
+                        $item['parent_sku']
+                    );
+            } catch (MagentoSaveException $e) {
+                //TODO: Collect these errors and throw an exception
+                //should we continue saving the product or bail?
+            }
+        }
+
+        if (isset($item['images']) && is_array($item['images'])) {
+            foreach ($item['images'] as $image) {
+                $this->remoteImageImporter->importImage($product, $image);
+            }
         }
     }
 
