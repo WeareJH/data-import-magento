@@ -46,7 +46,7 @@ class ConfigurableProductService
 
         $configData = [];
         foreach ($attributes as $attribute) {
-            $configData[$attribute] = [
+            $configData[] = [
                 'attribute_id'  => $this->eavAttrModel->getIdByCode('catalog_product', $attribute),
                 'label'         => $product->getAttributeText($attribute),
                 'value_index'   => $product->getData($attribute),
@@ -55,23 +55,7 @@ class ConfigurableProductService
         }
 
         /** @see \Mage_Catalog_Model_Product_Type_Configurable::save */
-        $configProduct->setConfigurableProductsData([$product->getId() => null]);
-
-        $configurableAttributesData = $configProduct
-            ->getTypeInstance()
-            ->getConfigurableAttributesAsArray();
-
-        foreach ($configurableAttributesData as $key => $configAttributeData) {
-            if (isset($configData[$configAttributeData['attribute_code']])) {
-                //i'm sorry this is gross
-                //TODO: rewrite
-                $configurableAttributesData[$key]['values'][] = $configData[$configAttributeData['attribute_code']];
-            }
-        }
-
-        //TODO: This is not working yet. Debug??!!!!
-        $configProduct->setConfigurableAttributesData($configurableAttributesData);
-        $configProduct->setCanSaveConfigurableAttributes(true);
+        $configProduct->setConfigurableProductsData([$product->getId() => $configData]);
         $configProduct->save();
     }
 
