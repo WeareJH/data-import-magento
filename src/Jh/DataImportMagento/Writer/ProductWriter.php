@@ -3,10 +3,11 @@
 namespace Jh\DataImportMagento\Writer;
 
 use Ddeboer\DataImport\Writer\AbstractWriter;
-use Jh\DataImportMagento\Exception\AttributeNotExistException;
 use Jh\DataImportMagento\Exception\MagentoSaveException;
+use Jh\DataImportMagento\Service\AttributeService;
 use Jh\DataImportMagento\Service\ConfigurableProductService;
 use Jh\DataImportMagento\Service\RemoteImageImporter;
+use Jh\DataImportMagento\Factory\ConfigurableProductServiceFactory;
 
 /**
  * Class ProductWriter
@@ -57,6 +58,11 @@ class ProductWriter extends AbstractWriter
     protected $configurableProductService;
 
     /**
+     * @var AttributeService
+     */
+    protected $attributeService;
+
+    /**
      * @param \Mage_Catalog_Model_Product                   $productModel
      * @param \Mage_Eav_Model_Entity_Attribute              $eavAttrModel
      * @param \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
@@ -72,8 +78,9 @@ class ProductWriter extends AbstractWriter
         $this->eavAttrModel                 = $eavAttrModel;
         $this->eavAttrSrcModel              = $eavAttrSrcModel;
         $this->remoteImageImporter          = $remoteImageImporter;
-        //TODO: Move this outside, create a factory for this class
-        $this->configurableProductService   = new ConfigurableProductService;
+        $this->configurableProductService   = (new ConfigurableProductServiceFactory)->makeConfigurableProductService($eavAttrModel);
+        $this->attributeService             = new AttributeService($eavAttrModel, $eavAttrSrcModel);
+
     }
 
     /**
@@ -116,58 +123,9 @@ class ProductWriter extends AbstractWriter
             'status'        => '1',
             'tax_class_id'  => 2,   //Taxable Goods Tax Class
             'website_ids'   => [1],
-            'type_id'       => 'simple'
+            'type_id'       => 'simple',
+            'url_key'       => null
         ];
-    }
-
-    /**
-     * TODO: Move to AttributeService
-     *
-     * @param string $attrCode
-     * @param string $attrValue
-     *
-     * @return string
-     * @throws AttributeNotExistException
-     */
-    public function getAttrCodeCreateIfNotExist($attrCode, $attrValue)
-    {
-        $attrModel              = clone $this->eavAttrModel;
-        $attributeOptionsModel  = clone $this->eavAttrSrcModel;
-
-        $attributeId            = $attrModel->getIdByCode('catalog_product', $attrCode);
-
-        if (false === $attributeId) {
-            throw new AttributeNotExistException($attrCode);
-        }
-
-        $attribute = $attrModel->load($attributeId);
-
-        if (!$attribute->usesSource()) {
-            return $attrValue;
-        }
-
-        $attributeOptionsModel->setAttribute($attribute);
-        $options = $attributeOptionsModel->getAllOptions(false);
-
-        foreach ($options as $option) {
-            if (strtolower($option['label']) == strtolower($attrValue)) {
-                return $option['value'];
-            }
-        }
-
-        //not found - create it
-        $attribute->setData('option', array(
-            'value' => array(
-                'option' => array($attrValue, $attrValue)
-            )
-        ));
-        $attribute->save();
-
-        $attributeOptionsModel  = clone $this->eavAttrSrcModel;
-        $attributeOptionsModel->setAttribute($attribute);
-        $id = $attributeOptionsModel->getOptionId(strtolower($attrValue));
-
-        return $id;
     }
 
     /**
@@ -201,7 +159,11 @@ class ProductWriter extends AbstractWriter
         }
 
         if (isset($item['type_id']) && $item['type_id'] === 'configurable') {
-            $this->setupConfigurableProduct($product, $item['configurableAttributes']);
+            $this->configurableProductService
+            ->setupConfigurableProduct(
+                $product,
+                $item['configurableAttributes']
+            );
         }
 
         try {
@@ -213,14 +175,12 @@ class ProductWriter extends AbstractWriter
         if (
             isset($item['type_id']) &&
             $item['type_id'] === 'simple' &&
-            isset($item['configurableAttributes']) &&
             isset($item['parent_sku'])
         ) {
             try {
                 $this->configurableProductService
                     ->assignSimpleProductToConfigurable(
                         $product,
-                        $item['configurableAttributes'],
                         $item['parent_sku']
                     );
             } catch (MagentoSaveException $e) {
@@ -231,6 +191,7 @@ class ProductWriter extends AbstractWriter
 
         if (isset($item['images']) && is_array($item['images'])) {
             foreach ($item['images'] as $image) {
+                $product->setData('url_key', false);
                 $this->remoteImageImporter->importImage($product, $image);
             }
         }
@@ -248,7 +209,7 @@ class ProductWriter extends AbstractWriter
                 continue;
             }
 
-            $attrId = $this->getAttrCodeCreateIfNotExist($attributeCode, $attributeValue);
+            $attrId = $this->attributeService->getAttrCodeCreateIfNotExist('catalog_product' ,$attributeCode, $attributeValue);
             $product->setData($attributeCode, $attrId);
         }
     }
