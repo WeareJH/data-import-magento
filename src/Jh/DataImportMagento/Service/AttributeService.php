@@ -20,6 +20,11 @@ class AttributeService
     protected $eavAttrSrcModel;
 
     /**
+     * @var array
+     */
+    protected $cachedAttributeOptionsValues = array();
+
+    /**
      * @param \Mage_Eav_Model_Entity_Attribute $eavAttrModel
      * @param \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
      */
@@ -40,6 +45,10 @@ class AttributeService
      */
     public function getAttrCodeCreateIfNotExist($entityType , $attrCode, $attrValue)
     {
+        if (isset($this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue])) {
+            return $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue];
+        }
+
         $attrModel              = clone $this->eavAttrModel;
         $attributeOptionsModel  = clone $this->eavAttrSrcModel;
 
@@ -52,6 +61,7 @@ class AttributeService
         $attribute = $attrModel->load($attributeId);
 
         if (!$attribute->usesSource()) {
+            $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue] = $attrValue;
             return $attrValue;
         }
 
@@ -60,6 +70,7 @@ class AttributeService
 
         foreach ($options as $option) {
             if (strtolower($option['label']) == strtolower($attrValue)) {
+                $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue] = $option['value'];
                 return $option['value'];
             }
         }
@@ -75,6 +86,8 @@ class AttributeService
         $attributeOptionsModel  = clone $this->eavAttrSrcModel;
         $attributeOptionsModel->setAttribute($attribute);
         $id = $attributeOptionsModel->getOptionId(strtolower($attrValue));
+
+        $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue] = $id;
 
         return $id;
     }

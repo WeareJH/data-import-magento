@@ -84,12 +84,6 @@ class ProductWriter extends AbstractWriter
     }
 
     /**
-     * TODO: More performant way to keep tracking of already present/newly added attribute options
-     * EG. We could load the existing options for each attribute in the @see ProductWriter::prepare() method
-     * When we search and create attribute options in @see ProductWriter::getAttrCodeCreateIfNotExist add them
-     * to a class variable
-     * holding all attribute options so we don't have to query DB again???? #winning
-     *
      * @return \Ddeboer\DataImport\Writer\WriterInterface|void
      */
     public function prepare()
