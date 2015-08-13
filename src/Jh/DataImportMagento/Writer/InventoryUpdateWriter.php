@@ -28,11 +28,6 @@ class InventoryUpdateWriter extends AbstractWriter
     const STOCK_UPDATE_TYPE_SET = 'set';
 
     /**
-     * @var \Mage_CatalogInventory_Model_Stock_Item
-     */
-    protected $stockModel;
-
-    /**
      * @var array
      */
     protected $options = [
@@ -42,18 +37,17 @@ class InventoryUpdateWriter extends AbstractWriter
     ];
 
     /**
-     * @param \Mage_CatalogInventory_Model_Stock_Item $stockModel
      * @param \Mage_Catalog_Model_Product $productModel
      * @param array $options
      */
     public function __construct(
-        \Mage_CatalogInventory_Model_Stock_Item $stockModel,
         \Mage_Catalog_Model_Product $productModel,
         array $options = array()
     ) {
-        $this->stockModel   = $stockModel;
         $this->productModel = $productModel;
-        $this->setOptions($options);
+        if (!empty($options)) {
+            $this->setOptions($options);
+        }
     }
 
     /**
@@ -102,49 +96,20 @@ class InventoryUpdateWriter extends AbstractWriter
             );
         }
 
-        $stockItem = clone $this->stockModel;
-
         //If Given a sku as the Product ID field, we need to get the product ID
         //from the actual product
-        //TODO: We should be able to provide an option which allows setting the ID field for the actual product
-        //TODO: So we could specify, that the id field is a product field, so load gthe product first
-        //TODO: USing the given ID field and pass the Product ID to the stock model and load
-        //TODO: ATM, if the ID field isn't 'sku' then it will attempt to load the stock model, using the ID
-        //TODO field and ID value
+        $product = clone $this->productModel;
         if ($this->options['productIdField'] === 'sku') {
-            $product    = clone $this->productModel;
-            $productId  = $product->getIdBySku($id);
-
-            if (!$productId) {
+            $id = $product->getIdBySku($id);
+            if (!$id) {
                 throw new WriterException(
                     sprintf('Product not found with SKU: "%s"', $id)
                 );
             }
-
-            $stockItem->load($productId, 'product_id');
-            if (!$stockItem->getId()) {
-                //TODO: Create it if it doesn't exist?
-
-                throw new WriterException(
-                    sprintf('No Stock Model found for Product with SKU: "%s"', $id)
-                );
-            }
-
-        } else {
-            $stockItem->load($id, $this->options['productIdField']);
-
-            if (!$stockItem->getId()) {
-                //TODO: Create it if it doesn't exist?
-
-                throw new WriterException(
-                    sprintf(
-                        'No Stock Model found for ID: "%s" Using ID Field: "%s"',
-                        $id,
-                        $this->options['productIdField']
-                    )
-                );
-            }
         }
+
+        $product->load($id);
+        $stockItem = $product->getStockItem();
 
         switch ($this->options['stockUpdateType']) {
             case self::STOCK_UPDATE_TYPE_ADD:
