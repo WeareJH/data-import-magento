@@ -31,8 +31,8 @@ class InventoryUpdateWriter extends AbstractWriter
      * @var array
      */
     protected $options = [
-        'productIdField'    => 'sku',
-        'stockUpdateType'   => self::STOCK_UPDATE_TYPE_SET,
+        'productIdField'                => 'sku',
+        'stockUpdateType'               => self::STOCK_UPDATE_TYPE_SET,
         'updateStockStatusIfInStock'    => true
     ];
 
@@ -45,9 +45,7 @@ class InventoryUpdateWriter extends AbstractWriter
         array $options = array()
     ) {
         $this->productModel = $productModel;
-        if (!empty($options)) {
-            $this->setOptions($options);
-        }
+        $this->setOptions($options);
     }
 
     /**
@@ -99,17 +97,24 @@ class InventoryUpdateWriter extends AbstractWriter
         //If Given a sku as the Product ID field, we need to get the product ID
         //from the actual product
         $product = clone $this->productModel;
-        if ($this->options['productIdField'] === 'sku') {
-            $id = $product->getIdBySku($id);
-            if (!$id) {
-                throw new WriterException(
-                    sprintf('Product not found with SKU: "%s"', $id)
-                );
-            }
+        switch ($this->options['productIdField']) {
+            case 'sku':
+                $productId = $product->getIdBySku($id);
+                if (!$productId) {
+                    throw new WriterException(
+                        sprintf('Product not found with SKU: "%s"', $id)
+                    );
+                }
+                break;
+            case 'id':
+            default:
+                //default to assume just using product_id
+                $productId = $id;
+                break;
         }
 
-        $product->load($id);
-        $stockItem = $product->getStockItem();
+        $product->load($productId);
+        $stockItem = $product->getData('stock_item');
 
         switch ($this->options['stockUpdateType']) {
             case self::STOCK_UPDATE_TYPE_ADD:
@@ -129,7 +134,7 @@ class InventoryUpdateWriter extends AbstractWriter
 
         try {
             $stockItem->save();
-        } catch (\Mage_Core_Exception $e) {
+        } catch (\Exception $e) {
             throw new MagentoSaveException($e);
         }
 
