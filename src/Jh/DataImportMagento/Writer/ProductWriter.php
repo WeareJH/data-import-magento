@@ -23,14 +23,19 @@ class ProductWriter extends AbstractWriter
     protected $productModel;
 
     /**
-     * @var \Mage_Eav_Model_Entity_Attribute
+     * @var RemoteImageImporter
      */
-    protected $eavAttrModel;
+    protected $remoteImageImporter;
 
     /**
-     * @var \Mage_Eav_Model_Entity_Attribute_Source_Table
+     * @var ConfigurableProductService
      */
-    protected $eavAttrSrcModel;
+    protected $configurableProductService;
+
+    /**
+     * @var AttributeService
+     */
+    protected $attributeService;
 
     /**
      * @var null
@@ -48,39 +53,21 @@ class ProductWriter extends AbstractWriter
     protected $defaultStockData = array();
 
     /**
-     * @var RemoteImageImporter
-     */
-    protected $remoteImageImporter;
-
-    /**
-     * @var ConfigurableProductService
-     */
-    protected $configurableProductService;
-
-    /**
-     * @var AttributeService
-     */
-    protected $attributeService;
-
-    /**
      * @param \Mage_Catalog_Model_Product                   $productModel
-     * @param \Mage_Eav_Model_Entity_Attribute              $eavAttrModel
-     * @param \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
      * @param RemoteImageImporter                           $remoteImageImporter
+     * @param AttributeService                              $attributeService
+     * @param ConfigurableProductService                    $configurableProductService
      */
     public function __construct(
         \Mage_Catalog_Model_Product $productModel,
-        \Mage_Eav_Model_Entity_Attribute $eavAttrModel,
-        \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel,
-        RemoteImageImporter $remoteImageImporter
+        RemoteImageImporter $remoteImageImporter,
+        AttributeService $attributeService,
+        ConfigurableProductService $configurableProductService
     ) {
         $this->productModel                 = $productModel;
-        $this->eavAttrModel                 = $eavAttrModel;
-        $this->eavAttrSrcModel              = $eavAttrSrcModel;
         $this->remoteImageImporter          = $remoteImageImporter;
-        $this->configurableProductService   = (new ConfigurableProductServiceFactory)->makeConfigurableProductService($eavAttrModel);
-        $this->attributeService             = new AttributeService($eavAttrModel, $eavAttrSrcModel);
-
+        $this->configurableProductService   = $configurableProductService;
+        $this->attributeService             = $attributeService;
     }
 
     /**
@@ -146,18 +133,19 @@ class ProductWriter extends AbstractWriter
 
         $item = array_merge($this->defaultProductData, $item);
 
-        $product->setData($item);
-
         if (isset($item['attributes'])) {
             $this->processAttributes($item['attributes'], $product);
+            unset($item['attributes']);
         }
+
+        $product->setData($item);
 
         if (isset($item['type_id']) && $item['type_id'] === 'configurable') {
             $this->configurableProductService
-            ->setupConfigurableProduct(
-                $product,
-                $item['configurableAttributes']
-            );
+                ->setupConfigurableProduct(
+                    $product,
+                    $item['configurableAttributes']
+                );
         }
 
         try {
@@ -195,7 +183,7 @@ class ProductWriter extends AbstractWriter
      * @param array $attributes
      * @param \Mage_Catalog_Model_Product $product
      */
-    public function processAttributes(array $attributes, \Mage_Catalog_Model_Product $product)
+    private function processAttributes(array $attributes, \Mage_Catalog_Model_Product $product)
     {
         foreach ($attributes as $attributeCode => $attributeValue) {
 
@@ -203,7 +191,9 @@ class ProductWriter extends AbstractWriter
                 continue;
             }
 
-            $attrId = $this->attributeService->getAttrCodeCreateIfNotExist('catalog_product' ,$attributeCode, $attributeValue);
+            $attrId = $this->attributeService
+                ->getAttrCodeCreateIfNotExist('catalog_product', $attributeCode, $attributeValue);
+
             $product->setData($attributeCode, $attrId);
         }
     }

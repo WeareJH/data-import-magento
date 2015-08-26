@@ -1,12 +1,14 @@
 <?php
-/**
- * @author: Diego Cabrejas <diego@wearejh.com>
- */
 
 namespace Jh\DataImportMagento\Service;
 
 use Jh\DataImportMagento\Exception\AttributeNotExistException;
 
+/**
+ * Class AttributeService
+ * @package Jh\DataImportMagento\Service
+ * @author  Aydin Hassan <aydin@hotmail.co.uk>
+ */
 class AttributeService
 {
     /**
@@ -51,7 +53,6 @@ class AttributeService
 
         $attrModel              = clone $this->eavAttrModel;
         $attributeOptionsModel  = clone $this->eavAttrSrcModel;
-
         $attributeId            = $attrModel->getIdByCode($entityType, $attrCode);
 
         if (false === $attributeId) {

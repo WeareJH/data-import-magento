@@ -11,220 +11,34 @@ use Jh\DataImportMagento\Writer\ProductWriter;
  */
 class ProductWriterTest extends \PHPUnit_Framework_TestCase
 {
-
+    /**
+     * @var ProductWriter
+     */
     protected $productWriter;
     protected $productModel;
-    protected $attrModel;
-    protected $attrSrcModel;
+    protected $attributeService;
+    protected $remoteImageImporter;
+    protected $configurableProductService;
 
     public function setUp()
     {
-        $this->productModel     = $this->getMock('\Mage_Catalog_Model_Product', array(), array(), '', false);
-        $this->attrModel        = $this->getMock('\Mage_Eav_Model_Entity_Attribute');
-        $this->attrSrcModel     = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Source_Table');
+        $this->productModel                 = $this->getMock('\Mage_Catalog_Model_Product', array(), array(), '', false);
+        $this->remoteImageImporter          = $this->getMock('\Jh\DataImportMagento\Service\RemoteImageImporter');
 
-        $this->productWriter    = new ProductWriter($this->productModel, $this->attrModel, $this->attrSrcModel);
-    }
-
-
-    public function testProcessAttributes()
-    {
-        $attributes = array(
-            'code1' => 'option1',
-            'code2' => 'option2',
-        );
-
-        $this->productModel
-            ->expects($this->at(0))
-            ->method('setData')
-            ->with('code1', 'option1');
-
-        $this->productModel
-            ->expects($this->at(1))
-            ->method('setData')
-            ->with('code2', 'option2');
-
-        $this->productWriter = $this->getMockBuilder('\Jh\DataImportMagento\Writer\ProductWriter')
-            ->setMethods(array('getAttrCodeCreateIfNotExist'))
+        $this->attributeService             = $this->getMockBuilder('Jh\DataImportMagento\Service\AttributeService')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->productWriter
-            ->expects($this->at(0))
-            ->method('getAttrCodeCreateIfNotExist')
-            ->with('code1', 'option1')
-            ->will($this->returnValue('option1'));
+        $this->configurableProductService   = $this->getMockBuilder('\Jh\DataImportMagento\Service\ConfigurableProductService')
+            ->disableOriginalConstructor()
+            ->getMock();
 
-        $this->productWriter
-            ->expects($this->at(1))
-            ->method('getAttrCodeCreateIfNotExist')
-            ->with('code2', 'option2')
-            ->will($this->returnValue('option2'));
-
-        $this->productWriter->processAttributes($attributes, $this->productModel);
-    }
-
-
-    public function testProcessAttributesSkipsNullValues()
-    {
-        $this->productModel
-            ->expects($this->never())
-            ->method('setData');
-
-        $this->productWriter->processAttributes(array('code1' => null), $this->productModel);
-    }
-
-    public function testGetAttributeCreatesAttributeIfItDoesNotExist()
-    {
-
-        $attribute = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
-
-        $options = array(
-            array('label' => 'option1', 'value' => 'code1'),
-            array('label' => 'option2', 'value' => 'code2'),
+        $this->productWriter = new ProductWriter(
+            $this->productModel,
+            $this->remoteImageImporter,
+            $this->attributeService,
+            $this->configurableProductService
         );
-
-        $this->attrModel
-             ->expects($this->once())
-             ->method('getIdByCode')
-             ->with('catalog_product', 'code3')
-             ->will($this->returnValue(1));
-
-        $this->attrModel
-             ->expects($this->once())
-             ->method('load')
-             ->with(1)
-             ->will($this->returnValue($attribute));
-
-        $this->attrSrcModel
-             ->expects($this->exactly(2))
-             ->method('setAttribute')
-             ->with($attribute);
-
-        $this->attrSrcModel
-            ->expects($this->once())
-            ->method('getAllOptions')
-            ->with(false)
-            ->will($this->returnValue($options));
-
-        $this->attrSrcModel
-            ->expects($this->once())
-            ->method('getOptionId')
-            ->with('option3')
-            ->will($this->returnValue('code3'));
-
-        $data = array(
-            'value' => array(
-                'option' => array('option3', 'option3')
-            )
-        );
-
-        $attribute
-            ->expects($this->once())
-            ->method('usesSource')
-            ->will($this->returnValue(true));
-
-        $attribute
-            ->expects($this->once())
-            ->method('setData')
-            ->with('option', $data);
-
-        $attribute
-            ->expects($this->once())
-            ->method('save');
-
-        $ret = $this->productWriter->getAttrCodeCreateIfNotExist('code3', 'option3');
-        $this->assertEquals($ret, 'code3');
-    }
-
-    public function testGetAttributeReturnsIdIfItExists()
-    {
-        $attribute = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
-
-        $options = array(
-            array('label' => 'option1', 'value' => 'code1'),
-            array('label' => 'option2', 'value' => 'code2'),
-        );
-
-        $this->attrModel
-            ->expects($this->once())
-            ->method('getIdByCode')
-            ->with('catalog_product', 'code2')
-            ->will($this->returnValue(1));
-
-        $this->attrModel
-            ->expects($this->once())
-            ->method('load')
-            ->with(1)
-            ->will($this->returnValue($attribute));
-
-        $this->attrSrcModel
-            ->expects($this->once())
-            ->method('setAttribute')
-            ->with($attribute);
-
-        $this->attrSrcModel
-            ->expects($this->once())
-            ->method('getAllOptions')
-            ->with(false)
-            ->will($this->returnValue($options));
-
-        $attribute
-            ->expects($this->once())
-            ->method('usesSource')
-            ->will($this->returnValue(true));
-
-        $attribute
-            ->expects($this->never())
-            ->method('setData');
-
-        $attribute
-            ->expects($this->never())
-            ->method('save');
-
-        $ret = $this->productWriter->getAttrCodeCreateIfNotExist('code2', 'option2');
-        $this->assertEquals($ret, 'code2');
-    }
-
-    public function testGetAttributeReturnsValueIfAttributeDoesNotUseSource()
-    {
-        $attribute = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
-
-        $this->attrModel
-            ->expects($this->once())
-            ->method('getIdByCode')
-            ->with('catalog_product', 'attribute_code')
-            ->will($this->returnValue(1));
-
-        $this->attrModel
-            ->expects($this->once())
-            ->method('load')
-            ->with(1)
-            ->will($this->returnValue($attribute));
-
-        $attribute
-            ->expects($this->once())
-            ->method('usesSource')
-            ->will($this->returnValue(false));
-
-        $ret = $this->productWriter->getAttrCodeCreateIfNotExist('attribute_code', 'some_value');
-        $this->assertEquals($ret, 'some_value');
-    }
-
-    public function testGetAttributeThrowsExceptionIfAttributeDoesNotExist()
-    {
-        $this->setExpectedException(
-            'Jh\DataImportMagento\Exception\AttributeNotExistException',
-            'Attribute with code: "not_here" does not exist'
-        );
-
-        $this->attrModel
-            ->expects($this->once())
-            ->method('getIdByCode')
-            ->with('catalog_product', 'not_here')
-            ->will($this->returnValue(false));
-
-        $this->productWriter->getAttrCodeCreateIfNotExist('not_here', 'some_value');
     }
 
     public function testPrepareMethodSetsUpDataCorrectly()
@@ -245,30 +59,112 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             'attributes'        => array(),
             'attribute_set_id'  => 0,
             'stock_data'        => array(),
-            'weight'            => 0,
+            'weight'            => '0',
+            'status'            => '1',
+            'tax_class_id'      => 2,
+            'website_ids'       => [1],
+            'type_id'           => 'simple',
+            'url_key'           => null
         );
 
-        $this->productWriter = $this->getMockBuilder('\Jh\DataImportMagento\Writer\ProductWriter')
-            ->setMethods(array('processAttributes'))
-            ->setConstructorArgs(array($this->productModel, $this->attrModel, $this->attrSrcModel))
-            ->getMock();
-
-        $refObject   = new \ReflectionObject($this->productWriter);
-        $refProperty = $refObject->getProperty('defaultProductData');
-        $refProperty->setAccessible(true);
-        $refProperty->setValue($this->productWriter, array());
-
-        $this->productWriter
-             ->expects($this->once())
-             ->method('processAttributes')
-             ->with($data['attributes'], $this->productModel);
-
+        $expected = $data;
+        unset($expected['attributes']);
         $this->productModel
             ->expects($this->once())
             ->method('setData')
-            ->with($data);
+            ->with($expected);
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('save');
+
+        $this->productWriter->writeItem($data);
+    }
+
+    public function testWriteWithAttributesDelegatesToAttributeService()
+    {
+        $data = array(
+            'name'              => 'Product 1',
+            'description'       => 'Description',
+            'attributes'        => array(
+                'code1' => 'option1',
+                'code2' => 'option2',
+            ),
+            'attribute_set_id'  => 0,
+            'stock_data'        => array(),
+            'weight'            => '0',
+            'status'            => '1',
+            'tax_class_id'      => 2,
+            'website_ids'       => [1],
+            'type_id'           => 'simple',
+            'url_key'           => null
+        );
+
+        $this->productModel
+            ->expects($this->at(0))
+            ->method('setData')
+            ->with('code1', 'option1');
+
+        $this->productModel
+            ->expects($this->at(1))
+            ->method('setData')
+            ->with('code2', 'option2');
+
+        $expected = $data;
+        unset($expected['attributes']);
+        $this->productModel
+            ->expects($this->at(2))
+            ->method('setData')
+            ->with($expected);
+
+        $this->attributeService
+            ->expects($this->at(0))
+            ->method('getAttrCodeCreateIfNotExist')
+            ->with('catalog_product', 'code1', 'option1')
+            ->will($this->returnValue('option1'));
+
+        $this->attributeService
+            ->expects($this->at(1))
+            ->method('getAttrCodeCreateIfNotExist')
+            ->with('catalog_product', 'code2', 'option2')
+            ->will($this->returnValue('option2'));
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('save');
+
+        $this->productWriter->writeItem($data);
+    }
 
 
+    public function testWriteItemWithNullAttributesAreSkipped()
+    {
+        $data = array(
+            'name'              => 'Product 1',
+            'description'       => 'Description',
+            'attributes'        => array(
+                'code1' => null,
+            ),
+            'attribute_set_id'  => 0,
+            'stock_data'        => array(),
+            'weight'            => '0',
+            'status'            => '1',
+            'tax_class_id'      => 2,
+            'website_ids'       => [1],
+            'type_id'           => 'simple',
+            'url_key'           => null
+        );
+
+        $expected = $data;
+        unset($expected['attributes']);
+        $this->productModel
+            ->expects($this->once())
+            ->method('setData')
+            ->with($expected);
+
+        $this->attributeService
+            ->expects($this->never())
+            ->method('getAttrCodeCreateIfNotExist');
 
         $this->productModel
             ->expects($this->once())
@@ -284,13 +180,14 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             'description'       => 'Description',
             'attribute_set_id'  => 0,
             'stock_data'        => array(),
-            'weight'            => 0,
+            'weight'            => '0',
+            'status'            => '1',
+            'tax_class_id'      => 2,
+            'website_ids'       => [1],
+            'type_id'           => 'simple',
+            'url_key'           => null
         );
 
-        $refObject   = new \ReflectionObject($this->productWriter);
-        $refProperty = $refObject->getProperty('defaultProductData');
-        $refProperty->setAccessible(true);
-        $refProperty->setValue($this->productWriter, array());
 
         $this->productModel
             ->expects($this->once())
@@ -315,24 +212,39 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             'description'       => 'Description',
         );
 
-        $refObject   = new \ReflectionObject($this->productWriter);
-        $refProperty = $refObject->getProperty('defaultStockData');
-        $refProperty->setAccessible(true);
-        $refProperty->setValue($this->productWriter, array('someKey' => 'someValue'));
-
-        $refProperty = $refObject->getProperty('defaultProductData');
-        $refProperty->setAccessible(true);
-        $refProperty->setValue($this->productWriter, array('someKey' => 'someValue'));
-
         $expected = array(
             'name'              => 'Product 1',
             'description'       => 'Description',
-            'attribute_set_id'  => 0,
-            'stock_data'        => array(
-                'someKey' => 'someValue'
-            ),
-            'weight'            => 0,
-            'someKey'           => 'someValue'
+            'attribute_set_id'  => null,
+            'stock_data'        => [
+                'manage_stock'                  => 1,
+                'use_config_manage_stock'       => 1,
+                'qty'                           => 0,
+                'min_qty'                       => 0,
+                'use_config_min_qty'            => 1,
+                'min_sale_qty'                  => 1,
+                'use_config_min_sale_qty'       => 1,
+                'max_sale_qty'                  => 10000,
+                'use_config_max_sale_qty'       => 1,
+                'is_qty_decimal'                => 0,
+                'backorders'                    => 0,
+                'use_config_backorders'         => 1,
+                'notify_stock_qty'              => 1,
+                'use_config_notify_stock_qty'   => 1,
+                'enable_qty_increments'         => 0,
+                'use_config_enable_qty_inc'     => 1,
+                'qty_increments'                => 0,
+                'use_config_qty_increments'     => 1,
+                'is_in_stock'                   => 0,
+                'low_stock_date'                => null,
+                'stock_status_changed_auto'     => 0
+            ],
+            'weight'            => '0',
+            'status'            => '1',
+            'tax_class_id'      => 2,
+            'website_ids'       => [1],
+            'type_id'           => 'simple',
+            'url_key'           => null
         );
 
         $this->productModel
@@ -347,6 +259,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->will($this->throwException($e));
 
         $this->setExpectedException('Jh\DataImportMagento\Exception\MagentoSaveException', 'Save Failed');
+        $this->productWriter->prepare();
         $this->productWriter->writeItem($data);
     }
 }
