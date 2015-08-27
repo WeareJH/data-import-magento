@@ -68,7 +68,7 @@ class XmlWriter implements WriterInterface
         $res = $dom->save($this->outputFileName);
 
         if (false === $res) {
-            throw new Exception("Couldn't write data to xml file in class " . __CLASS__ . ", line " . __LINE__);
+            throw new WriterException(sprintf('Could not write XML file to: "%s"', $this->outputFileName));
         }
         return $this;
     }
