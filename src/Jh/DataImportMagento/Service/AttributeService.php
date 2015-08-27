@@ -40,12 +40,12 @@ class AttributeService
 
     /**
      * @param string $entityType
-     * @param $attrCode
-     * @param $attrValue
-     * @return null
+     * @param string $attrCode
+     * @param string $attrValue
+     * @return string Attribute Value or ID
      * @throws AttributeNotExistException
      */
-    public function getAttrCodeCreateIfNotExist($entityType , $attrCode, $attrValue)
+    public function getAttrCodeCreateIfNotExist($entityType, $attrCode, $attrValue)
     {
         if (isset($this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue])) {
             return $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue];

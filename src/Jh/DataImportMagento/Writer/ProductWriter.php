@@ -154,8 +154,7 @@ class ProductWriter extends AbstractWriter
             throw new MagentoSaveException($e);
         }
 
-        if (
-            isset($item['type_id']) &&
+        if (isset($item['type_id']) &&
             $item['type_id'] === 'simple' &&
             isset($item['parent_sku'])
         ) {
@@ -186,7 +185,6 @@ class ProductWriter extends AbstractWriter
     private function processAttributes(array $attributes, \Mage_Catalog_Model_Product $product)
     {
         foreach ($attributes as $attributeCode => $attributeValue) {
-
             if (!$attributeValue) {
                 continue;
             }

@@ -62,10 +62,8 @@ class NestedValueConverterWorkflow extends Workflow
         }
 
         foreach ($this->valueConverters as $property => $converters) {
-
             //is this is targeting a nested field
             if (strpos($property, '/') !== false) {
-
                 $properties = explode('/', $property);
                 $item = $this->recursivelyConvertValues($properties, $item, $converters);
 
@@ -104,7 +102,6 @@ class NestedValueConverterWorkflow extends Workflow
                 }
             }
         } else {
-
             if (isset($data[$property])) {
                 if ($isCollection) {
                     foreach ($data[$property] as $key => $item) {

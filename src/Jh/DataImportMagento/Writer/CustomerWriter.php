@@ -71,7 +71,6 @@ class CustomerWriter extends AbstractWriter
         //model for each and set it on the customer
         if ($this->addressModel) {
             foreach ($addresses as $addressData) {
-
                 //lookup region info:
                 $name = '';
                 if (isset($addressData['firstname']) && $addressData['lastname']) {
@@ -100,7 +99,6 @@ class CustomerWriter extends AbstractWriter
         try {
             $customer->save();
         } catch (\Mage_Core_Exception $e) {
-
             $message = $e->getMessage();
             if (isset($item['email'])) {
                 $message .= " : " . $item['email'];
@@ -108,7 +106,6 @@ class CustomerWriter extends AbstractWriter
 
             throw new MagentoSaveException($message);
         }
-
     }
 
     /**
@@ -120,7 +117,6 @@ class CustomerWriter extends AbstractWriter
 
         $sortedRegions = array();
         foreach ($regions as $region) {
-
             $countryId = $region->getData('country_id');
             if (!isset($sortedRegions[$countryId])) {
                 $sortedRegions[$countryId] = array(

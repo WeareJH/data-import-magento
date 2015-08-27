@@ -224,7 +224,6 @@ class OrderStatusWriter implements WriterInterface
     {
         $actualShip = [];
         foreach ($toShip as $itemId => $qty) {
-
             if (isset($alreadyShipped[$itemId])) {
                 $actualShip[$itemId] = $qty - $alreadyShipped[$itemId];
             } else {
@@ -300,7 +299,6 @@ class OrderStatusWriter implements WriterInterface
     {
         $actualRefund = [];
         foreach ($toRefund as $itemId => $qty) {
-
             if (isset($alreadyRefunded[$itemId])) {
                 $actualRefund[$itemId] = $qty - $alreadyRefunded[$itemId];
             } else {

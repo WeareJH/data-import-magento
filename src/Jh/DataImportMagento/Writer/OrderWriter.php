@@ -143,7 +143,7 @@ class OrderWriter extends AbstractWriter
                 throw new WriterException(sprintf('Product with SKU: %s does not exist in Magento', $item['sku']));
             }
 
-            $quoteItem 	= clone $this->quoteItemModel;
+            $quoteItem = clone $this->quoteItemModel;
             $quoteItem->setProduct($product);
             $quoteItem->setQuote($quote);
             $quoteItem->setQty($item['qty']);

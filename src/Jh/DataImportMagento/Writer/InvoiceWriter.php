@@ -65,7 +65,6 @@ class InvoiceWriter extends AbstractWriter
         }
 
         try {
-
             $invoice->register();
             $invoice->getOrder()->setIsInProcess(true);
 

@@ -22,14 +22,15 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->productModel                 = $this->getMock('\Mage_Catalog_Model_Product', array(), array(), '', false);
-        $this->remoteImageImporter          = $this->getMock('\Jh\DataImportMagento\Service\RemoteImageImporter');
+        $this->productModel = $this->getMock('\Mage_Catalog_Model_Product', array(), array(), '', false);
+        $this->remoteImageImporter = $this->getMock('\Jh\DataImportMagento\Service\RemoteImageImporter');
 
-        $this->attributeService             = $this->getMockBuilder('Jh\DataImportMagento\Service\AttributeService')
+        $this->attributeService = $this->getMockBuilder('Jh\DataImportMagento\Service\AttributeService')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->configurableProductService   = $this->getMockBuilder('\Jh\DataImportMagento\Service\ConfigurableProductService')
+        $this->configurableProductService =
+            $this->getMockBuilder('\Jh\DataImportMagento\Service\ConfigurableProductService')
             ->disableOriginalConstructor()
             ->getMock();
 

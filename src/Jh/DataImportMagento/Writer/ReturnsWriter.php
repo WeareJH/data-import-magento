@@ -163,7 +163,6 @@ class ReturnsWriter extends AbstractWriter
     {
         $actualRefund = [];
         foreach ($toRefund as $itemId => $qty) {
-
             if (isset($alreadyRefunded[$itemId])) {
                 $actualRefund[$itemId] = $qty - $alreadyRefunded[$itemId];
             } else {
