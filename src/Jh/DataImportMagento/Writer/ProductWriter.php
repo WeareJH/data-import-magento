@@ -38,7 +38,7 @@ class ProductWriter extends AbstractWriter
     protected $attributeService;
 
     /**
-     * @var null
+     * @var null|string
      */
     protected $defaultAttributeSetId = null;
 

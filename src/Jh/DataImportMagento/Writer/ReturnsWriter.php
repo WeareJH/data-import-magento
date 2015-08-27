@@ -59,7 +59,7 @@ class ReturnsWriter extends AbstractWriter
         $service    = $this->getServiceForOrder($order);
 
         $quantities         = $this->validateItemsToBeRefunded($order, $item['items']);
-        $alreadyReturned    = $this->getItemsRefunded($order, $quantities);
+        $alreadyReturned    = $this->getItemsRefunded($order);
         //TODO: Make this configurable - Some Returns will not include the total qty's returned
         //TODO: Just the exact qty to return.
         $returnQuantities    = $this->getActualRefundCount($alreadyReturned, $quantities);

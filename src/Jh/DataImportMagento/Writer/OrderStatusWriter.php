@@ -58,7 +58,7 @@ class OrderStatusWriter implements WriterInterface
         $order = $this->getOrder($item['orderId']);
 
         $quantities             = $this->validateItemsToBeShipped($order, $item['items']);
-        $alreadyRefunded        = $this->getItemsShipped($order, $quantities);
+        $alreadyRefunded        = $this->getItemsShipped($order);
         //TODO: Make this configurable - Some Returns will not include the total qty's shipped
         //TODO: Just the exact qty to ship.
         $shipmentQuantities     = $this->getActualShipmentCount($alreadyRefunded, $quantities);
@@ -74,7 +74,7 @@ class OrderStatusWriter implements WriterInterface
         }
 
         $quantities         = $this->validateItemsToBeRefunded($order, $item['items']);
-        $alreadyReturned    = $this->getItemsRefunded($order, $quantities);
+        $alreadyReturned    = $this->getItemsRefunded($order);
         //TODO: Make this configurable - Some Returns will not include the total qty's returned
         //TODO: Just the exact qty to return.
         $returnQuantities    = $this->getActualRefundCount($alreadyReturned, $quantities);
@@ -118,8 +118,8 @@ class OrderStatusWriter implements WriterInterface
         $shipment = $order->prepareShipment($quantities);
 
         if ($this->options['send_shipment_email']) {
-            $shipment->setEmailSent(true);
-            $shipment->getOrder()->setCustomerNoteNotify(true);
+            $shipment->setEmailSent(1);
+            $shipment->getOrder()->setCustomerNoteNotify(1);
         }
 
         $shipment->register();
@@ -161,8 +161,8 @@ class OrderStatusWriter implements WriterInterface
         ]);
 
         if ($this->options['send_credit_memo_email']) {
-            $creditMemo->setEmailSent(true);
-            $creditMemo->getOrder()->setCustomerNoteNotify(true);
+            $creditMemo->setEmailSent(1);
+            $creditMemo->getOrder()->setCustomerNoteNotify(1);
         }
 
         //don't actually perform refund.

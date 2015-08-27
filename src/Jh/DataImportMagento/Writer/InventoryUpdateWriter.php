@@ -28,6 +28,11 @@ class InventoryUpdateWriter extends AbstractWriter
     const STOCK_UPDATE_TYPE_SET = 'set';
 
     /**
+     * @var \Mage_Catalog_Model_Product
+     */
+    private $productModel;
+
+    /**
      * @var array
      */
     protected $options = [
