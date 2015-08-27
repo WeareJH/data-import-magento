@@ -31,7 +31,7 @@ class RemoteImageImporterTest extends \PHPUnit_Framework_TestCase
     {
         $url  = __DIR__ . '/../Fixtures/honey.jpg';
         $path = realpath(__DIR__ . '/../../../');
-        $path .= '/vendor/magento/magento/media/import/9715407e5f5861d8861084de46a0fb2c.jpg';
+        $path .= '/vendor/magento/magento/media/import/efba9ed5cc7df0bb6fc031bde060ffd4.jpg';
 
         $this->product
             ->expects($this->once())
