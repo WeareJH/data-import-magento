@@ -20,6 +20,11 @@ class TaxClassValueConverter implements ValueConverterInterface
     private $taxClasses = [];
 
     /**
+     * @var string
+     */
+    private $default = 'Taxable Goods';
+
+    /**
      *  Get the Tax Classes
      */
     public function __construct()
@@ -37,6 +42,10 @@ class TaxClassValueConverter implements ValueConverterInterface
      */
     public function convert($input)
     {
+        if (empty($input)) {
+            $input = $this->default;
+        }
+
         if (!in_array($input, $this->taxClasses)) {
             throw new UnexpectedValueException(
                 sprintf(

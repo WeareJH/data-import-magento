@@ -57,4 +57,10 @@ class TaxClassValueConverterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(2, $this->converter->convert('Taxable Goods'));
         $this->mageDouble->verifyInvoked('getSingleton', ['tax/class_source_product']);
     }
+
+    public function testDefaultValueIsUsedIfNoValueSet()
+    {
+        $this->assertEquals(2, $this->converter->convert(""));
+        $this->mageDouble->verifyInvoked('getSingleton', ['tax/class_source_product']);
+    }
 }

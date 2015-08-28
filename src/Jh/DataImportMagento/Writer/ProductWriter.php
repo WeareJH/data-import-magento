@@ -138,14 +138,9 @@ class ProductWriter extends AbstractWriter
             unset($item['attributes']);
         }
 
-        $product->setData($item);
-
-        if (isset($item['type_id']) && $item['type_id'] === 'configurable') {
-            $this->configurableProductService
-                ->setupConfigurableProduct(
-                    $product,
-                    $item['configurableAttributes']
-                );
+        $product->addData($item);
+        if ($this->isConfigurable($item)) {
+            $this->processConfigurableProduct($item, $product);
         }
 
         try {
@@ -194,5 +189,32 @@ class ProductWriter extends AbstractWriter
 
             $product->setData($attributeCode, $attrId);
         }
+    }
+
+    /**
+     * @param array $item
+     * @return bool
+     */
+    private function isConfigurable(array $item)
+    {
+        return isset($item['type_id']) && $item['type_id'] === 'configurable';
+    }
+
+    /**
+     * @param array                       $item
+     * @param \Mage_Catalog_Model_Product $product
+     */
+    private function processConfigurableProduct(array $item, \Mage_Catalog_Model_Product $product)
+    {
+        $attributes = [];
+        if (isset($item['configurable_attributes']) && is_array($item['configurable_attributes'])) {
+            $attributes = $item['configurable_attributes'];
+        }
+
+        $this->configurableProductService
+            ->setupConfigurableProduct(
+                $product,
+                $attributes
+            );
     }
 }

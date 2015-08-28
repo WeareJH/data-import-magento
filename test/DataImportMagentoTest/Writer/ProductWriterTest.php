@@ -72,7 +72,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
         unset($expected['attributes']);
         $this->productModel
             ->expects($this->once())
-            ->method('setData')
+            ->method('addData')
             ->with($expected);
 
         $this->productModel
@@ -114,8 +114,8 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
         $expected = $data;
         unset($expected['attributes']);
         $this->productModel
-            ->expects($this->at(2))
-            ->method('setData')
+            ->expects($this->once())
+            ->method('addData')
             ->with($expected);
 
         $this->attributeService
@@ -160,7 +160,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
         unset($expected['attributes']);
         $this->productModel
             ->expects($this->once())
-            ->method('setData')
+            ->method('addData')
             ->with($expected);
 
         $this->attributeService
@@ -192,7 +192,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
 
         $this->productModel
             ->expects($this->once())
-            ->method('setData')
+            ->method('addData')
             ->with($data);
 
 
@@ -250,7 +250,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
 
         $this->productModel
             ->expects($this->once())
-            ->method('setData')
+            ->method('addData')
             ->with($expected);
 
         $e = new \Mage_Customer_Exception("Save Failed");
