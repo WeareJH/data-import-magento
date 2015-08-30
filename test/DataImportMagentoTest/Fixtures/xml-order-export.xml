@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<orders>
+  <order>
+    <orders_info>
+      <orders_id>1</orders_id>
+      <customers_id>2</customers_id>
+      <delivery_name>Royal Mail</delivery_name>
+    </orders_info>
+  </order>
+  <totals>
+    <ot_total>100</ot_total>
+  </totals>
+  <products_info>
+    <order_products>
+      <order_products_id>10</order_products_id>
+      <products_quantity>4</products_quantity>
+      <is_inventory>1</is_inventory>
+    </order_products>
+    <order_products>
+      <order_products_id>20</order_products_id>
+      <products_quantity>5</products_quantity>
+      <is_inventory>0</is_inventory>
+    </order_products>
+  </products_info>
+</orders>

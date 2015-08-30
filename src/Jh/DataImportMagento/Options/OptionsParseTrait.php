@@ -33,5 +33,4 @@ trait OptionsParseTrait
 
         return $cleanOptions;
     }
-
 }

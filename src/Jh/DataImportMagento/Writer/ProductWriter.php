@@ -3,8 +3,11 @@
 namespace Jh\DataImportMagento\Writer;
 
 use Ddeboer\DataImport\Writer\AbstractWriter;
-use Jh\DataImportMagento\Exception\AttributeNotExistException;
 use Jh\DataImportMagento\Exception\MagentoSaveException;
+use Jh\DataImportMagento\Service\AttributeService;
+use Jh\DataImportMagento\Service\ConfigurableProductService;
+use Jh\DataImportMagento\Service\RemoteImageImporter;
+use Jh\DataImportMagento\Factory\ConfigurableProductServiceFactory;
 
 /**
  * Class ProductWriter
@@ -20,17 +23,22 @@ class ProductWriter extends AbstractWriter
     protected $productModel;
 
     /**
-     * @var \Mage_Eav_Model_Entity_Attribute
+     * @var RemoteImageImporter
      */
-    protected $eavAttrModel;
+    protected $remoteImageImporter;
 
     /**
-     * @var \Mage_Eav_Model_Entity_Attribute_Source_Table
+     * @var ConfigurableProductService
      */
-    protected $eavAttrSrcModel;
+    protected $configurableProductService;
 
     /**
-     * @var null
+     * @var AttributeService
+     */
+    protected $attributeService;
+
+    /**
+     * @var null|string
      */
     protected $defaultAttributeSetId = null;
 
@@ -45,27 +53,24 @@ class ProductWriter extends AbstractWriter
     protected $defaultStockData = array();
 
     /**
-     * @param \Mage_Catalog_Model_Product $productModel
-     * @param \Mage_Eav_Model_Entity_Attribute $eavAttrModel
-     * @param \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
+     * @param \Mage_Catalog_Model_Product                   $productModel
+     * @param RemoteImageImporter                           $remoteImageImporter
+     * @param AttributeService                              $attributeService
+     * @param ConfigurableProductService                    $configurableProductService
      */
     public function __construct(
         \Mage_Catalog_Model_Product $productModel,
-        \Mage_Eav_Model_Entity_Attribute $eavAttrModel,
-        \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
+        RemoteImageImporter $remoteImageImporter,
+        AttributeService $attributeService,
+        ConfigurableProductService $configurableProductService
     ) {
-        $this->productModel     = $productModel;
-        $this->eavAttrModel     = $eavAttrModel;
-        $this->eavAttrSrcModel  = $eavAttrSrcModel;
+        $this->productModel                 = $productModel;
+        $this->remoteImageImporter          = $remoteImageImporter;
+        $this->configurableProductService   = $configurableProductService;
+        $this->attributeService             = $attributeService;
     }
 
     /**
-     * TODO: More performant way to keep tracking of already present/newly added attribute options
-     * EG. We could load the existing options for each attribute in the @see ProductWriter::prepare() method
-     * When we search and create attribute options in @see ProductWriter::getAttrCodeCreateIfNotExist add them
-     * to a class variable
-     * holding all attribute options so we don't have to query DB again???? #winning
-     *
      * @return \Ddeboer\DataImport\Writer\WriterInterface|void
      */
     public function prepare()
@@ -99,56 +104,9 @@ class ProductWriter extends AbstractWriter
             'status'        => '1',
             'tax_class_id'  => 2,   //Taxable Goods Tax Class
             'website_ids'   => [1],
-            'type_id'       => 'simple'
+            'type_id'       => 'simple',
+            'url_key'       => null
         ];
-    }
-
-    /**
-     * @param string $attrCode
-     * @param string $attrValue
-     *
-     * @return string
-     * @throws AttributeNotExistException
-     */
-    public function getAttrCodeCreateIfNotExist($attrCode, $attrValue)
-    {
-        $attrModel              = clone $this->eavAttrModel;
-        $attributeOptionsModel  = clone $this->eavAttrSrcModel;
-
-        $attributeId            = $attrModel->getIdByCode('catalog_product', $attrCode);
-
-        if (false === $attributeId) {
-            throw new AttributeNotExistException($attrCode);
-        }
-
-        $attribute = $attrModel->load($attributeId);
-
-        if (!$attribute->usesSource()) {
-            return $attrValue;
-        }
-
-        $attributeOptionsModel->setAttribute($attribute);
-        $options = $attributeOptionsModel->getAllOptions(false);
-
-        foreach ($options as $option) {
-            if (strtolower($option['label']) == strtolower($attrValue)) {
-                return $option['value'];
-            }
-        }
-
-        //not found - create it
-        $attribute->setData('option', array(
-            'value' => array(
-                'option' => array($attrValue, $attrValue)
-            )
-        ));
-        $attribute->save();
-
-        $attributeOptionsModel  = clone $this->eavAttrSrcModel;
-        $attributeOptionsModel->setAttribute($attribute);
-        $id = $attributeOptionsModel->getOptionId(strtolower($attrValue));
-
-        return $id;
     }
 
     /**
@@ -175,16 +133,43 @@ class ProductWriter extends AbstractWriter
 
         $item = array_merge($this->defaultProductData, $item);
 
-        $product->setData($item);
-
         if (isset($item['attributes'])) {
             $this->processAttributes($item['attributes'], $product);
+            unset($item['attributes']);
+        }
+
+        $product->addData($item);
+        if ($this->isConfigurable($item)) {
+            $this->processConfigurableProduct($item, $product);
         }
 
         try {
-            $product->save($product);
-        } catch (\Mage_Core_Exception $e) {
+            $product->save();
+        } catch (\Exception $e) {
             throw new MagentoSaveException($e);
+        }
+
+        if (isset($item['type_id']) &&
+            $item['type_id'] === 'simple' &&
+            isset($item['parent_sku'])
+        ) {
+            try {
+                $this->configurableProductService
+                    ->assignSimpleProductToConfigurable(
+                        $product,
+                        $item['parent_sku']
+                    );
+            } catch (MagentoSaveException $e) {
+                //TODO: Collect these errors and throw an exception
+                //should we continue saving the product or bail?
+            }
+        }
+
+        if (isset($item['images']) && is_array($item['images'])) {
+            foreach ($item['images'] as $image) {
+                $product->setData('url_key', false);
+                $this->remoteImageImporter->importImage($product, $image);
+            }
         }
     }
 
@@ -192,16 +177,44 @@ class ProductWriter extends AbstractWriter
      * @param array $attributes
      * @param \Mage_Catalog_Model_Product $product
      */
-    public function processAttributes(array $attributes, \Mage_Catalog_Model_Product $product)
+    private function processAttributes(array $attributes, \Mage_Catalog_Model_Product $product)
     {
         foreach ($attributes as $attributeCode => $attributeValue) {
-
             if (!$attributeValue) {
                 continue;
             }
 
-            $attrId = $this->getAttrCodeCreateIfNotExist($attributeCode, $attributeValue);
+            $attrId = $this->attributeService
+                ->getAttrCodeCreateIfNotExist('catalog_product', $attributeCode, $attributeValue);
+
             $product->setData($attributeCode, $attrId);
         }
+    }
+
+    /**
+     * @param array $item
+     * @return bool
+     */
+    private function isConfigurable(array $item)
+    {
+        return isset($item['type_id']) && $item['type_id'] === 'configurable';
+    }
+
+    /**
+     * @param array                       $item
+     * @param \Mage_Catalog_Model_Product $product
+     */
+    private function processConfigurableProduct(array $item, \Mage_Catalog_Model_Product $product)
+    {
+        $attributes = [];
+        if (isset($item['configurable_attributes']) && is_array($item['configurable_attributes'])) {
+            $attributes = $item['configurable_attributes'];
+        }
+
+        $this->configurableProductService
+            ->setupConfigurableProduct(
+                $product,
+                $attributes
+            );
     }
 }

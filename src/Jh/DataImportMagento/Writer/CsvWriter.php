@@ -141,7 +141,6 @@ class CsvWriter extends AbstractWriter
     public function writeItem(array $item)
     {
         if (null !== $this->columnHeaders) {
-
             if ($this->headersCount !== count($item)) {
                 throw new ReaderException("Row contains a different amount of items to headers");
             }

@@ -57,7 +57,6 @@ class ItemNesterConverter implements ItemConverterInterface
 
         $data = array();
         foreach ($this->mappings as $from => $remove) {
-
             if (isset($input[$from])) {
                 $data[$from] = $input[$from];
             } else {
@@ -91,7 +90,6 @@ class ItemNesterConverter implements ItemConverterInterface
             if (!is_array($mapping)) {
                 $processedMappings[$mapping] = true;
             } else {
-
                 $field = key($mapping);
                 $value = $mapping[$field];
 

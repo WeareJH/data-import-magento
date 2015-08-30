@@ -25,24 +25,18 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
         $this->productModel     = $this->getMockBuilder('\Mage_Catalog_Model_Product')
             ->disableOriginalConstructor()
             ->getMock();
-
-        $this->inventoryUpdateWriter = new InventoryUpdateWriter(
-            $this->stockItemModel,
-            $this->productModel
-        );
     }
 
+    /**
+     * @return InventoryUpdateWriter
+     */
     public function getInventoryWriter()
     {
-        return new InventoryUpdateWriter(
-            $this->stockItemModel,
-            $this->productModel,
-            $this->options
-        );
+        return new InventoryUpdateWriter($this->productModel, $this->options);
     }
 
 
-    public function testCantSetUnrecognizedUpdateType()
+    public function testCannotSetUnrecognizedUpdateType()
     {
         $this->options['stockUpdateType'] = 'notatype';
         $this->setExpectedException(
@@ -50,7 +44,7 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
             "'notatype' is not a valid value for 'stockUpdateType'"
         );
 
-        $writer = $this->getInventoryWriter();
+        $this->getInventoryWriter();
     }
 
     public function testCanSetValidUpdateType()
@@ -101,81 +95,35 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
         $writer->writeItem($data);
     }
 
-    public function testExceptionIsThrownIfStockModelCannotBeLoadedByProductId()
-    {
-        $productId = 2;
-        $sku = 'PROD1234';
-        $data = ['product_id' => $sku, 'qty' => 10];
-
-        $this->productModel
-            ->expects($this->once())
-            ->method('getIdBySku')
-            ->with($sku)
-            ->will($this->returnValue($productId));
-
-        $this->stockItemModel
-            ->expects($this->once())
-            ->method('load')
-            ->with($productId, 'product_id');
-
-        $this->stockItemModel
-            ->expects($this->once())
-            ->method('getId')
-            ->will($this->returnValue(null));
-
-        $writer = $this->getInventoryWriter();
-
-        $message = 'No Stock Model found for Product with SKU: "PROD1234"';
-        $this->setExpectedException('Ddeboer\DataImport\Exception\WriterException', $message);
-        $writer->writeItem($data);
-    }
-
-    public function testExceptionIsThrownIfProductCannotBeLoadedByCustomField()
-    {
-        $id = 5;
-        $data = ['product_id' => $id, 'qty' => 10];
-
-        $this->options['productIdField'] = 'item_id';
-
-        $this->productModel
-            ->expects($this->never())
-            ->method('getIdBySku');
-
-        $this->stockItemModel
-            ->expects($this->once())
-            ->method('getId')
-            ->will($this->returnValue(null));
-
-        $writer = $this->getInventoryWriter();
-
-        $message = 'No Stock Model found for ID: "5" Using ID Field: "item_id"';
-        $this->setExpectedException('Ddeboer\DataImport\Exception\WriterException', $message);
-        $writer->writeItem($data);
-    }
-
     public function testStockQtyIsSetWhenUpdateModeIsSet()
     {
         $id = 5;
         $data = ['product_id' => $id, 'qty' => 10];
 
-        $this->options['productIdField'] = 'item_id';
+        $this->options['productIdField'] = 'id';
 
         $this->productModel
             ->expects($this->never())
             ->method('getIdBySku');
 
-        $this->stockItemModel
+        $this->productModel
             ->expects($this->once())
-            ->method('getId')
-            ->will($this->returnValue(1));
+            ->method('load')
+            ->with(5);
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('getData')
+            ->with('stock_item')
+            ->will($this->returnValue($this->stockItemModel));
 
         $this->stockItemModel
-            ->expects($this->at(2))
+            ->expects($this->at(0))
             ->method('setData')
             ->with('qty', 10);
 
         $this->stockItemModel
-            ->expects($this->at(4))
+            ->expects($this->at(2))
             ->method('setData')
             ->with('is_in_stock', 1);
 
@@ -193,16 +141,22 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
         $id = 5;
         $data = ['product_id' => $id, 'qty' => 10];
 
-        $this->options['productIdField'] = 'item_id';
+        $this->options['productIdField'] = 'id';
 
         $this->productModel
             ->expects($this->never())
             ->method('getIdBySku');
 
-        $this->stockItemModel
+        $this->productModel
             ->expects($this->once())
-            ->method('getId')
-            ->will($this->returnValue(1));
+            ->method('load')
+            ->with(5);
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('getData')
+            ->with('stock_item')
+            ->will($this->returnValue($this->stockItemModel));
 
         $this->stockItemModel
             ->expects($this->once())
@@ -211,12 +165,12 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(5));
 
         $this->stockItemModel
-            ->expects($this->at(3))
+            ->expects($this->at(1))
             ->method('setData')
             ->with('qty', 15);
 
         $this->stockItemModel
-            ->expects($this->at(5))
+            ->expects($this->at(3))
             ->method('setData')
             ->with('is_in_stock', 1);
 
@@ -240,15 +194,16 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
             ->with($sku)
             ->will($this->returnValue($productId));
 
-        $this->stockItemModel
+        $this->productModel
             ->expects($this->once())
             ->method('load')
-            ->with($productId, 'product_id');
+            ->with(2);
 
-        $this->stockItemModel
+        $this->productModel
             ->expects($this->once())
-            ->method('getId')
-            ->will($this->returnValue(4));
+            ->method('getData')
+            ->with('stock_item')
+            ->will($this->returnValue($this->stockItemModel));
 
         $e = new \Mage_Customer_Exception("Save Failed");
         $this->stockItemModel

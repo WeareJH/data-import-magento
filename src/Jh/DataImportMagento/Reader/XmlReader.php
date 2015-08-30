@@ -23,7 +23,6 @@ class XmlReader extends ArrayReader
     public function __construct($stream, array $xPaths = array(), $type = 'nest')
     {
         if (!is_resource($stream) || 'stream' !== get_resource_type($stream)) {
-
             throw new \InvalidArgumentException(
                 sprintf(
                     'Expected argument to be a stream resource, got "%s"',

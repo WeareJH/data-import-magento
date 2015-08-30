@@ -63,7 +63,6 @@ class RemoveUnwantedFieldsConverter implements ItemConverterInterface
 
         //remove any fields not required
         foreach ($input as $key => $val) {
-
             if (is_array($val)) {
                 $fieldsToKeep = $this->fieldsToKeep[$key];
                 $return[$key] = array_map(function ($nestedItem) use ($fieldsToKeep) {
@@ -78,7 +77,6 @@ class RemoveUnwantedFieldsConverter implements ItemConverterInterface
 
         //add missing values
         foreach ($this->fieldsToKeep as $keyField => $valueField) {
-
             if (is_array($valueField)) {
                 if (!isset($return[$keyField])) {
                     $return[$keyField] = [];

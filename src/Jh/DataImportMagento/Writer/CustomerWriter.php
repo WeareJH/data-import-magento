@@ -13,12 +13,12 @@ class CustomerWriter extends AbstractWriter
 {
 
     /**
-     * @var Mage_Customer_Model_Customer
+     * @var \Mage_Customer_Model_Customer
      */
     protected $customerModel;
 
     /**
-     * @var Mage_Customer_Model_Address
+     * @var \Mage_Customer_Model_Address
      */
     protected $addressModel;
 
@@ -46,7 +46,7 @@ class CustomerWriter extends AbstractWriter
         $this->addressModel     = $addressModel;
 
         //load countries and regions
-        if ($this->addressModel) {
+        if ($this->addressModel && $regions) {
             $this->regions = $this->processRegions($regions);
         }
 
@@ -54,12 +54,15 @@ class CustomerWriter extends AbstractWriter
 
     /**
      * @param array $item
+     * @return $this
+     * @throws MagentoSaveException
      */
     public function writeItem(array $item)
     {
         $customer = clone $this->customerModel;
 
         //get address
+        $addresses = [];
         if (isset($item['address'])) {
             $addresses = $item['address'];
             unset($item['address']);
@@ -71,7 +74,6 @@ class CustomerWriter extends AbstractWriter
         //model for each and set it on the customer
         if ($this->addressModel) {
             foreach ($addresses as $addressData) {
-
                 //lookup region info:
                 $name = '';
                 if (isset($addressData['firstname']) && $addressData['lastname']) {
@@ -100,7 +102,6 @@ class CustomerWriter extends AbstractWriter
         try {
             $customer->save();
         } catch (\Mage_Core_Exception $e) {
-
             $message = $e->getMessage();
             if (isset($item['email'])) {
                 $message .= " : " . $item['email'];
@@ -109,6 +110,7 @@ class CustomerWriter extends AbstractWriter
             throw new MagentoSaveException($message);
         }
 
+        return $this;
     }
 
     /**
@@ -117,10 +119,8 @@ class CustomerWriter extends AbstractWriter
      */
     public function processRegions(\Mage_Directory_Model_Resource_Region_Collection $regions)
     {
-
         $sortedRegions = array();
         foreach ($regions as $region) {
-
             $countryId = $region->getData('country_id');
             if (!isset($sortedRegions[$countryId])) {
                 $sortedRegions[$countryId] = array(

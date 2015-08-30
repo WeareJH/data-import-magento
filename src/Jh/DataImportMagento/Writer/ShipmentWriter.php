@@ -54,7 +54,6 @@ class ShipmentWriter extends AbstractWriter
         }
 
         try {
-
             $shipment = $order->prepareShipment();
             $shipment->register();
             $shipment->getOrder()->setData('is_in_process', true);

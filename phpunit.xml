@@ -2,6 +2,7 @@
 
 <phpunit bootstrap="./test/Bootstrap.php"
          colors="true"
+         backupGlobals="false"
 >
 
     <testsuite name="Jh DataImportMagento tests">
