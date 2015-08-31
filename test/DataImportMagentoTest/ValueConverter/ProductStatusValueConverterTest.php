@@ -34,4 +34,9 @@ class ProductStatusValueConverterTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(1, $this->converter->convert('Enabled'));
     }
+
+    public function testDefaultValueIsUsedIfNoValueSet()
+    {
+        $this->assertEquals(2, $this->converter->convert(""));
+    }
 }

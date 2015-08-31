@@ -20,6 +20,11 @@ class ProductStatusValueConverter implements ValueConverterInterface
     private $productStatuses = [];
 
     /**
+     * @var string
+     */
+    private $default = 'Disabled';
+
+    /**
      *  Get the Tax Classes
      */
     public function __construct()
@@ -33,6 +38,10 @@ class ProductStatusValueConverter implements ValueConverterInterface
      */
     public function convert($input)
     {
+        if (empty($input)) {
+            $input = $this->default;
+        }
+
         if (!in_array($input, $this->productStatuses)) {
             throw new UnexpectedValueException(
                 sprintf(
