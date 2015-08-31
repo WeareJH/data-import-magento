@@ -34,4 +34,9 @@ class ProductVisibilityValueConverterTest extends \PHPUnit_Framework_TestCase
     {
         $this->assertEquals(4, $this->converter->convert('Catalog, Search'));
     }
+
+    public function testDefaultValueIsUsedIfNoValueSet()
+    {
+        $this->assertEquals(1, $this->converter->convert(""));
+    }
 }

@@ -20,6 +20,11 @@ class ProductVisibilityValueConverter implements ValueConverterInterface
     private $productVisibilities = [];
 
     /**
+     * @var string
+     */
+    private $default = 'Not Visible Individually';
+
+    /**
      *  Get the Tax Classes
      */
     public function __construct()
@@ -33,6 +38,10 @@ class ProductVisibilityValueConverter implements ValueConverterInterface
      */
     public function convert($input)
     {
+        if (empty($input)) {
+            $input = $this->default;
+        }
+
         if (!in_array($input, $this->productVisibilities)) {
             throw new UnexpectedValueException(
                 sprintf(
