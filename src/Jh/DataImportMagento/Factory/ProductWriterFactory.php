@@ -27,7 +27,7 @@ class ProductWriterFactory
             $productModel,
             new RemoteImageImporter,
             new AttributeService($eavAttrModel, $eavAttrSrcModel),
-            new ConfigurableProductService($eavAttrModel)
+            new ConfigurableProductService($eavAttrModel, \Mage::getModel('catalog/product'))
         );
     }
 }

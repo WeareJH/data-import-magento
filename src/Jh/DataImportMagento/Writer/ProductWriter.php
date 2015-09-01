@@ -167,8 +167,8 @@ class ProductWriter extends AbstractWriter
         }
 
         if (isset($item['images']) && is_array($item['images'])) {
+            $product->setData('url_key', false);
             foreach ($item['images'] as $image) {
-                $product->setData('url_key', false);
                 $this->remoteImageImporter->importImage($product, $image);
             }
         }

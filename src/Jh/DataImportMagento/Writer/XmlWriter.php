@@ -4,6 +4,7 @@ namespace Jh\DataImportMagento\Writer;
 
 use Ddeboer\DataImport\Writer\WriterInterface;
 use DOMDocument;
+use DOMElement;
 use Exception;
 
 /**

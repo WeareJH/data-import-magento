@@ -2,8 +2,9 @@
 
 namespace Jh\DataImportMagento\Service;
 
-use Ddeboer\DataImport\Exception\WriterException;
 use Jh\DataImportMagento\Exception\MagentoSaveException;
+use Mage_Catalog_Model_Product;
+use Mage_Eav_Model_Entity_Attribute;
 
 /**
  * Class ConfigurableProductService
@@ -14,16 +15,23 @@ class ConfigurableProductService
 {
 
     /**
-     * @var \Mage_Eav_Model_Entity_Attribute
+     * @var Mage_Eav_Model_Entity_Attribute
      */
     protected $eavAttrModel;
 
     /**
-     * @param \Mage_Eav_Model_Entity_Attribute $eavAttrModel
+     * @var Mage_Catalog_Model_Product
      */
-    public function __construct(\Mage_Eav_Model_Entity_Attribute $eavAttrModel)
+    protected $productModel;
+
+    /**
+     * @param Mage_Eav_Model_Entity_Attribute $eavAttrModel
+     * @param Mage_Catalog_Model_Product       $product
+     */
+    public function __construct(Mage_Eav_Model_Entity_Attribute $eavAttrModel, Mage_Catalog_Model_Product $product)
     {
         $this->eavAttrModel = $eavAttrModel;
+        $this->productModel = $product;
     }
 
     /**
@@ -36,7 +44,7 @@ class ConfigurableProductService
         \Mage_Catalog_Model_Product $product,
         $parentSku
     ) {
-        $configProduct  = \Mage::getModel('catalog/product')
+        $configProduct  = $this->productModel
             ->loadByAttribute('sku', $parentSku);
 
         if (false === $configProduct) {
@@ -64,15 +72,14 @@ class ConfigurableProductService
 
         //We wanna keep the old used products as well so we add them to the config too. Their ids are enough.
         $oldProductsRelations      = [];
-        $existingUsedProductsId    = $configProduct->getTypeInstance()->getUsedProductIds();
+        $existingUsedProductsId    = $configType->getUsedProductIds();
         foreach ($existingUsedProductsId as $existingUsedProductId) {
             $oldProductsRelations[$existingUsedProductId] = [];
         }
 
         $productRelations = $oldProductsRelations + $newProductsRelations;
 
-        /** @see \Mage_Catalog_Model_Product_Type_Configurable::save */
-        $configProduct->setConfigurableProductsData($productRelations);
+        $configProduct->setData('configurable_products_data', $productRelations);
         $configProduct->save();
     }
 
@@ -103,10 +110,13 @@ class ConfigurableProductService
         }
 
         //set the attributes that should be configurable for this product
-        $product->getTypeInstance()->setUsedProductAttributeIds($attributeIds);
-        $configurableAttributesData = $product->getTypeInstance()->getConfigurableAttributesAsArray();
+        $productTypeInstance = $product->getTypeInstance();
+        $productTypeInstance->setUsedProductAttributeIds($attributeIds);
+        $configurableAttributesData = $productTypeInstance->getConfigurableAttributesAsArray();
 
-        $product->setCanSaveConfigurableAttributes(true);
-        $product->setConfigurableAttributesData($configurableAttributesData);
+        $product->setData([
+            'can_save_configurable_attributes' => true,
+            'configurable_attributes_data'     => $configurableAttributesData,
+        ]);
     }
 }
