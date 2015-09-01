@@ -3,6 +3,8 @@
 namespace Jh\DataImportMagento\Service;
 
 use Jh\DataImportMagento\Exception\MagentoSaveException;
+use Mage_Catalog_Model_Product;
+use Mage_Eav_Model_Entity_Attribute;
 
 /**
  * Class ConfigurableProductService
@@ -13,16 +15,23 @@ class ConfigurableProductService
 {
 
     /**
-     * @var \Mage_Eav_Model_Entity_Attribute
+     * @var Mage_Eav_Model_Entity_Attribute
      */
     protected $eavAttrModel;
 
     /**
-     * @param \Mage_Eav_Model_Entity_Attribute $eavAttrModel
+     * @var Mage_Catalog_Model_Product
      */
-    public function __construct(\Mage_Eav_Model_Entity_Attribute $eavAttrModel)
+    protected $productModel;
+
+    /**
+     * @param Mage_Eav_Model_Entity_Attribute $eavAttrModel
+     * @param Mage_Catalog_Model_Product       $product
+     */
+    public function __construct(Mage_Eav_Model_Entity_Attribute $eavAttrModel, Mage_Catalog_Model_Product $product)
     {
         $this->eavAttrModel = $eavAttrModel;
+        $this->productModel = $product;
     }
 
     /**
@@ -35,15 +44,19 @@ class ConfigurableProductService
         \Mage_Catalog_Model_Product $product,
         $parentSku
     ) {
-        $configProduct  = \Mage::getModel('catalog/product')
+        $configProduct  = $this->productModel
             ->loadByAttribute('sku', $parentSku);
 
         if (false === $configProduct) {
-            throw new MagentoSaveException('Product does not exist');
+            throw new MagentoSaveException(sprintf('Parent product with SKU: "%s" does not exist', $parentSku));
         }
 
-        $configType                = $configProduct->getTypeInstance(true);
-        $attributes                = $configType->getConfigurableAttributesAsArray($configProduct);
+        if ($configProduct->getData('type_id') !== 'configurable') {
+            throw new MagentoSaveException(sprintf('Parent product with SKU: "%s" is not configurable', $parentSku));
+        }
+
+        $configType = $configProduct->getTypeInstance(true);
+        $attributes = $configType->getConfigurableAttributesAsArray($configProduct);
 
         $configData = [];
         foreach ($attributes as $attribute) {
@@ -57,39 +70,53 @@ class ConfigurableProductService
         }
         $newProductsRelations = [$product->getId() => $configData];
 
-
         //We wanna keep the old used products as well so we add them to the config too. Their ids are enough.
         $oldProductsRelations      = [];
-        $existingUsedProductsId    = $configProduct->getTypeInstance()->getUsedProductIds();
+        $existingUsedProductsId    = $configType->getUsedProductIds();
         foreach ($existingUsedProductsId as $existingUsedProductId) {
-            $oldProductsRelations[$existingUsedProductId] = array();
+            $oldProductsRelations[$existingUsedProductId] = [];
         }
 
         $productRelations = $oldProductsRelations + $newProductsRelations;
 
-        /** @see \Mage_Catalog_Model_Product_Type_Configurable::save */
-        $configProduct->setConfigurableProductsData($productRelations);
+        $configProduct->setData('configurable_products_data', $productRelations);
         $configProduct->save();
     }
 
     /**
      * @param \Mage_Catalog_Model_Product $product
      * @param array                       $configurableAttributes
+     *
+     * @throws MagentoSaveException
      */
     public function setupConfigurableProduct(\Mage_Catalog_Model_Product $product, array $configurableAttributes)
     {
-        $attributeCodes = [];
+        $attributeIds = [];
 
         //get attribute ID's
         foreach ($configurableAttributes as $attribute) {
-            $attributeCodes[] = $this->eavAttrModel->getIdByCode('catalog_product', $attribute);
+            $attributeCode = $this->eavAttrModel->getIdByCode('catalog_product', $attribute);
+            if (false === $attributeCode) {
+                throw new MagentoSaveException(
+                    sprintf(
+                        'Cannot create configurable product with SKU: "%s". Attribute: "%s" does not exist',
+                        $product->getData('sku'),
+                        $attribute
+                    )
+                );
+            }
+
+            $attributeIds[] = $attributeCode;
         }
 
         //set the attributes that should be configurable for this product
-        $product->getTypeInstance()->setUsedProductAttributeIds($attributeCodes);
-        $configurableAttributesData = $product->getTypeInstance()->getConfigurableAttributesAsArray();
+        $productTypeInstance = $product->getTypeInstance();
+        $productTypeInstance->setUsedProductAttributeIds($attributeIds);
+        $configurableAttributesData = $productTypeInstance->getConfigurableAttributesAsArray();
 
-        $product->setCanSaveConfigurableAttributes(true);
-        $product->setConfigurableAttributesData($configurableAttributesData);
+        $product->setData([
+            'can_save_configurable_attributes' => true,
+            'configurable_attributes_data'     => $configurableAttributesData,
+        ]);
     }
 }

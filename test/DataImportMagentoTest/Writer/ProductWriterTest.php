@@ -174,6 +174,146 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
         $this->productWriter->writeItem($data);
     }
 
+    public function testCreateConfigurableProductThrowsExceptionIfNoAttributesSpecified()
+    {
+        $data = array(
+            'name'                      => 'Product 1',
+            'description'               => 'Description',
+            'configurable_attributes'   => [],
+            'attribute_set_id'          => 0,
+            'stock_data'                => array(),
+            'weight'                    => '0',
+            'status'                    => '1',
+            'tax_class_id'              => 2,
+            'website_ids'               => [1],
+            'type_id'                   => 'configurable',
+            'url_key'                   => null,
+            'sku'                       => 'PROD1'
+        );
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('addData')
+            ->with($data);
+
+        $this->setExpectedException(
+            '\Jh\DataImportMagento\Exception\MagentoSaveException',
+            'Configurable product with SKU: "PROD1" must have at least one "configurable_attribute" defined'
+        );
+
+        $this->productWriter->writeItem($data);
+    }
+
+    public function testCreateConfigurableProductDelegatesToConfigService()
+    {
+        $data = array(
+            'name'                      => 'Product 1',
+            'description'               => 'Description',
+            'configurable_attributes'   => ['Colour'],
+            'attribute_set_id'          => 0,
+            'stock_data'                => array(),
+            'weight'                    => '0',
+            'status'                    => '1',
+            'tax_class_id'              => 2,
+            'website_ids'               => [1],
+            'type_id'                   => 'configurable',
+            'url_key'                   => null,
+            'sku'                       => 'PROD1'
+        );
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('addData')
+            ->with($data);
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('save');
+
+        $this->configurableProductService
+            ->expects($this->once())
+            ->method('setupConfigurableProduct')
+            ->with($this->productModel, ['Colour']);
+
+        $this->productWriter->writeItem($data);
+    }
+
+    public function testSimpleProductWithParentIsConfigured()
+    {
+        $data = array(
+            'name'                      => 'Product 1',
+            'description'               => 'Description',
+            'attribute_set_id'          => 0,
+            'stock_data'                => array(),
+            'weight'                    => '0',
+            'status'                    => '1',
+            'tax_class_id'              => 2,
+            'website_ids'               => [1],
+            'type_id'                   => 'simple',
+            'url_key'                   => null,
+            'sku'                       => 'PROD1',
+            'parent_sku'                => 'PARENT1',
+        );
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('addData')
+            ->with($data);
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('save');
+
+        $this->configurableProductService
+            ->expects($this->once())
+            ->method('assignSimpleProductToConfigurable')
+            ->with($this->productModel, 'PARENT1');
+
+        $this->productWriter->writeItem($data);
+    }
+
+    public function testImagesAreImported()
+    {
+        $data = array(
+            'name'                      => 'Product 1',
+            'description'               => 'Description',
+            'attribute_set_id'          => 0,
+            'stock_data'                => array(),
+            'weight'                    => '0',
+            'status'                    => '1',
+            'tax_class_id'              => 2,
+            'website_ids'               => [1],
+            'type_id'                   => 'simple',
+            'url_key'                   => null,
+            'sku'                       => 'PROD1',
+            'images'                    => [
+                'http://image.com/image1.jpg',
+                'http://image.com/image2.jpg',
+            ]
+        );
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('addData')
+            ->with($data);
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('save');
+
+        $this->remoteImageImporter
+            ->expects($this->at(0))
+            ->method('importImage')
+            ->with($this->productModel, 'http://image.com/image1.jpg');
+
+        $this->remoteImageImporter
+            ->expects($this->at(1))
+            ->method('importImage')
+            ->with($this->productModel, 'http://image.com/image2.jpg');
+
+        $this->productWriter->writeItem($data);
+    }
+
     public function testMagentoSaveExceptionIsThrownIfSaveFails()
     {
         $data = array(

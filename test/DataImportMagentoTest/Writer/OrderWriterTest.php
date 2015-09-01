@@ -25,7 +25,7 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
         $this->convertQuote = $this->getMockModel('\Mage_Sales_Model_Convert_Quote');
         $this->customer     = $this->getMockModel('\Mage_Customer_Model_Customer');
         $this->product      = $this->getMockModel('\Mage_Catalog_Model_Product');
-        $this->quoteItem    = $this->getMockModel('\Mage_Sales_Model_Quote_Item');
+        $this->quoteItem    = $this->getMockModel('\Mage_Sales_Model_Quote_Item', true);
 
         $this->writer = new OrderWriter(
             $this->quote,
@@ -36,12 +36,16 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    protected function getMockModel($class)
+    protected function getMockModel($class, $disableClone = false)
     {
-        return $this->getMockBuilder($class)
-            ->disableOriginalConstructor()
-            ->getMock();
+        $mockBuilder = $this->getMockBuilder($class)
+            ->disableOriginalConstructor();
 
+        if ($disableClone) {
+            $mockBuilder->disableOriginalClone();
+        }
+
+        return $mockBuilder->getMock();
     }
 
     public function testExceptionIsThrownIfMappingAttributeOrPaymentMethodIsNotString()
@@ -76,7 +80,7 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
         ]);
 
         $orderMock
-            ->expects($this->once())
+            ->expects($this->any())
             ->method('getAllItems')
             ->will($this->returnValue([
                 $item1,
@@ -121,55 +125,43 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
     {
         $items = [
             ['sku' => 'SKU1', 'price' => 5, 'qty' => 2],
-            ['sku' => 'SKU2', 'price' => 8, 'qty' => 1],
         ];
 
         $this->product
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('loadByAttribute')
             ->will($this->returnSelf());
 
         $this->quoteItem
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('setProduct')
             ->with($this->product);
 
         $this->quoteItem
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('setQuote')
             ->with($this->quote);
 
         $this->quoteItem
-            ->expects($this->at(4))
+            ->expects($this->once())
             ->method('setQty')
-            ->with($items[0]['qty']);
+            ->with(2);
 
         $this->quoteItem
-            ->expects($this->at(10))
-            ->method('setQty')
-            ->with($items[1]['qty']);
-
-        $this->quoteItem
-            ->expects($this->at(5))
+            ->expects($this->once())
             ->method('addData')
             ->with([
-                'price'                 => $items[0]['price'],
-                'base_price'            => $items[0]['price'],
-                'original_price'        => $items[0]['price'],
-                'custom_price'          =>  $items[0]['price'],
-                'original_custom_price' =>  $items[0]['price']
+                'price'                 => 5,
+                'base_price'            => 5,
+                'original_price'        => 5,
+                'custom_price'          => 5,
+                'original_custom_price' => 5
             ]);
 
-        $this->quoteItem
-            ->expects($this->at(11))
-            ->method('addData')
-            ->with([
-                'price'                 =>  $items[1]['price'],
-                'base_price'            =>  $items[1]['price'],
-                'original_price'        =>  $items[1]['price'],
-                'custom_price'          =>  $items[1]['price'],
-                'original_custom_price' =>  $items[1]['price']
-            ]);
+        $this->quote
+            ->expects($this->once())
+            ->method('addItem')
+            ->with($this->quoteItem);
 
         $this->writer->addProductsToQuote($this->quote, $items);
     }
@@ -448,6 +440,25 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->method('setBillingAddress')
             ->with($orderAddress2);
 
+        $item1 = new \Mage_Sales_Model_Order_Item();
+        $item1->setData([
+            'price'          => 10,
+            'tax_amount'    => 20,
+        ]);
+        $item2 = new \Mage_Sales_Model_Order_Item();
+        $item2->setData([
+            'price'         => 220,
+            'tax_amount'    => 20,
+        ]);
+
+        $order
+            ->expects($this->any())
+            ->method('getAllItems')
+            ->will($this->returnValue([
+                $item1,
+                $item2
+            ]));
+
         $quoteItem = new \Mage_Sales_Model_Quote_Item();
         $quoteItem->addData(['sku' => 'SKU1']);
         $orderItem = $this->getMockModel('Mage_Sales_Model_Order_Item');
@@ -457,6 +468,18 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getAllItems')
             ->will($this->returnValue([$quoteItem]));
 
+        $payment = $this->getMock('Mage_Sales_Model_Quote_Payment');
+        $this->quote
+            ->expects($this->once())
+            ->method('getPayment')
+            ->will($this->returnValue($payment));
+
+        $orderPayment = $this->getMock('Mage_Sales_Model_Order_Payment');
+        $this->convertQuote
+            ->expects($this->once())
+            ->method('paymentToOrderPayment')
+            ->will($this->returnValue($orderPayment));
+
         $this->convertQuote
             ->expects($this->once())
             ->method('itemToOrderItem')
@@ -465,8 +488,17 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
 
         $orderData = [
             'items' => [
-                ['sku' => 'SKU1', 'discount_amount' => 6, 'tax_amount' => 20, 'gw_price' => 8, 'price' => 100],
-            ]
+                [
+                    'sku' => 'SKU1',
+                    'discount_amount' => 6,
+                    'tax_amount' => 20,
+                    'gw_price' => 8,
+                    'price' => 100,
+                ],
+            ],
+            'shipping_amount' => 30,
+            'gw_price'        => 20,
+            'discount_amount' => 20,
         ];
 
         $orderItem
