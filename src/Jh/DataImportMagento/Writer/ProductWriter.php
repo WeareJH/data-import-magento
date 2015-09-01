@@ -2,6 +2,7 @@
 
 namespace Jh\DataImportMagento\Writer;
 
+use Ddeboer\DataImport\Exception\WriterException;
 use Ddeboer\DataImport\Writer\AbstractWriter;
 use Jh\DataImportMagento\Exception\MagentoSaveException;
 use Jh\DataImportMagento\Service\AttributeService;
@@ -203,12 +204,23 @@ class ProductWriter extends AbstractWriter
     /**
      * @param array                       $item
      * @param \Mage_Catalog_Model_Product $product
+     *
+     * @throws MagentoSaveException
      */
     private function processConfigurableProduct(array $item, \Mage_Catalog_Model_Product $product)
     {
         $attributes = [];
         if (isset($item['configurable_attributes']) && is_array($item['configurable_attributes'])) {
             $attributes = $item['configurable_attributes'];
+        }
+
+        if (count($attributes) === 0) {
+            throw new MagentoSaveException(
+                sprintf(
+                    'Configurable product with SKU: "%s" must have at least one "configurable_attribute" defined',
+                    $item['sku']
+                )
+            );
         }
 
         $this->configurableProductService
