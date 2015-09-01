@@ -2,6 +2,7 @@
 
 namespace Jh\DataImportMagento\Service;
 
+use Ddeboer\DataImport\Exception\WriterException;
 use Jh\DataImportMagento\Exception\MagentoSaveException;
 
 /**
@@ -39,11 +40,15 @@ class ConfigurableProductService
             ->loadByAttribute('sku', $parentSku);
 
         if (false === $configProduct) {
-            throw new MagentoSaveException('Product does not exist');
+            throw new MagentoSaveException(sprintf('Parent product with SKU: "%s" does not exist', $parentSku));
         }
 
-        $configType                = $configProduct->getTypeInstance(true);
-        $attributes                = $configType->getConfigurableAttributesAsArray($configProduct);
+        if ($configProduct->getData('type_id') !== 'configurable') {
+            throw new MagentoSaveException(sprintf('Parent product with SKU: "%s" is not configurable', $parentSku));
+        }
+
+        $configType = $configProduct->getTypeInstance(true);
+        $attributes = $configType->getConfigurableAttributesAsArray($configProduct);
 
         $configData = [];
         foreach ($attributes as $attribute) {
@@ -57,12 +62,11 @@ class ConfigurableProductService
         }
         $newProductsRelations = [$product->getId() => $configData];
 
-
         //We wanna keep the old used products as well so we add them to the config too. Their ids are enough.
         $oldProductsRelations      = [];
         $existingUsedProductsId    = $configProduct->getTypeInstance()->getUsedProductIds();
         foreach ($existingUsedProductsId as $existingUsedProductId) {
-            $oldProductsRelations[$existingUsedProductId] = array();
+            $oldProductsRelations[$existingUsedProductId] = [];
         }
 
         $productRelations = $oldProductsRelations + $newProductsRelations;
@@ -75,18 +79,31 @@ class ConfigurableProductService
     /**
      * @param \Mage_Catalog_Model_Product $product
      * @param array                       $configurableAttributes
+     *
+     * @throws MagentoSaveException
      */
     public function setupConfigurableProduct(\Mage_Catalog_Model_Product $product, array $configurableAttributes)
     {
-        $attributeCodes = [];
+        $attributeIds = [];
 
         //get attribute ID's
         foreach ($configurableAttributes as $attribute) {
-            $attributeCodes[] = $this->eavAttrModel->getIdByCode('catalog_product', $attribute);
+            $attributeCode = $this->eavAttrModel->getIdByCode('catalog_product', $attribute);
+            if (false === $attributeCode) {
+                throw new MagentoSaveException(
+                    sprintf(
+                        'Cannot create configurable product with SKU: "%s". Attribute: "%s" does not exist',
+                        $product->getData('sku'),
+                        $attribute
+                    )
+                );
+            }
+
+            $attributeIds[] = $attributeCode;
         }
 
         //set the attributes that should be configurable for this product
-        $product->getTypeInstance()->setUsedProductAttributeIds($attributeCodes);
+        $product->getTypeInstance()->setUsedProductAttributeIds($attributeIds);
         $configurableAttributesData = $product->getTypeInstance()->getConfigurableAttributesAsArray();
 
         $product->setCanSaveConfigurableAttributes(true);
