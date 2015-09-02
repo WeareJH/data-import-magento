@@ -2,6 +2,7 @@
 
 namespace Jh\DataImportMagentoTest\Service;
 
+use Exception;
 use Jh\DataImportMagento\Service\ConfigurableProductService;
 
 /**
@@ -160,6 +161,95 @@ class ConfigurableProductServiceTest extends \PHPUnit_Framework_TestCase
         $this->service->assignSimpleProductToConfigurable($simpleProduct, 'PARENT1');
     }
 
+    public function testAssignSimpleThrowsCorrectExceptionIfSaveFails()
+    {
+        $configProduct = $this->getMock('Mage_Catalog_Model_Product');
+        $this->productModel
+            ->expects($this->once())
+            ->method('loadByAttribute')
+            ->with('sku', 'PARENT1')
+            ->will($this->returnValue($configProduct));
+
+        $configProduct
+            ->expects($this->once())
+            ->method('getData')
+            ->with('type_id')
+            ->will($this->returnValue('configurable'));
+
+        $simpleProduct = $this->getMock('Mage_Catalog_Model_Product');
+
+        $configType = $this->getMock('Mage_Catalog_Model_Product_Type_Configurable');
+        $configProduct
+            ->expects($this->once())
+            ->method('getTypeInstance')
+            ->will($this->returnValue($configType));
+
+        $configType
+            ->expects($this->once())
+            ->method('getConfigurableAttributesAsArray')
+            ->with($configProduct)
+            ->will($this->returnValue([
+                ['attribute_code' => 'colour']
+            ]));
+
+        $this->eavAttrModel
+            ->expects($this->once())
+            ->method('getIdByCode')
+            ->with('catalog_product', 'colour')
+            ->will($this->returnValue(30));
+
+        $simpleProduct
+            ->expects($this->once())
+            ->method('getAttributeText')
+            ->with('colour')
+            ->will($this->returnValue('green'));
+
+        $simpleProduct
+            ->expects($this->once())
+            ->method('getData')
+            ->with('colour')
+            ->will($this->returnValue(25));
+
+        $simpleProduct
+            ->expects($this->once())
+            ->method('getPrice')
+            ->will($this->returnValue(100));
+
+        $simpleProduct
+            ->expects($this->once())
+            ->method('getId')
+            ->will($this->returnValue(999));
+
+        $configType
+            ->expects($this->once())
+            ->method('getUsedProductIds')
+            ->will($this->returnValue([1, 2]));
+
+        $configProduct
+            ->expects($this->once())
+            ->method('setData')
+            ->with('configurable_products_data', [
+                1   => [],
+                2   => [],
+                999 => [
+                    [
+                        'attribute_id'  => 30,
+                        'label'         => 'green',
+                        'value_index'   => 25,
+                        'pricing_value' => 100,
+                    ]
+                ],
+            ]);
+
+        $configProduct
+            ->expects($this->once())
+            ->method('save')
+            ->will($this->throwException(new Exception('notbh')));
+
+        $this->setExpectedException('Jh\DataImportMagento\Exception\MagentoSaveException', 'notbh');
+        $this->service->assignSimpleProductToConfigurable($simpleProduct, 'PARENT1');
+    }
+
     public function testSetupConfigProductThrowsExceptionIfGivenAttributeDoesNotExist()
     {
         $configProduct = $this->getMock('Mage_Catalog_Model_Product');
@@ -214,7 +304,7 @@ class ConfigurableProductServiceTest extends \PHPUnit_Framework_TestCase
 
         $configProduct
             ->expects($this->once())
-            ->method('setData')
+            ->method('addData')
             ->with([
                 'can_save_configurable_attributes' => true,
                 'configurable_attributes_data'     => [['id' => 20], ['id' => 22]]

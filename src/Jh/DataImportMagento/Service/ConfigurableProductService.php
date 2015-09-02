@@ -2,6 +2,7 @@
 
 namespace Jh\DataImportMagento\Service;
 
+use Exception;
 use Jh\DataImportMagento\Exception\MagentoSaveException;
 use Mage_Catalog_Model_Product;
 use Mage_Eav_Model_Entity_Attribute;
@@ -55,7 +56,7 @@ class ConfigurableProductService
             throw new MagentoSaveException(sprintf('Parent product with SKU: "%s" is not configurable', $parentSku));
         }
 
-        $configType = $configProduct->getTypeInstance(true);
+        $configType = $configProduct->getTypeInstance();
         $attributes = $configType->getConfigurableAttributesAsArray($configProduct);
 
         $configData = [];
@@ -68,19 +69,21 @@ class ConfigurableProductService
                 'pricing_value' => $product->getPrice(),
             ];
         }
-        $newProductsRelations = [$product->getId() => $configData];
 
         //We wanna keep the old used products as well so we add them to the config too. Their ids are enough.
-        $oldProductsRelations      = [];
-        $existingUsedProductsId    = $configType->getUsedProductIds();
-        foreach ($existingUsedProductsId as $existingUsedProductId) {
-            $oldProductsRelations[$existingUsedProductId] = [];
+        $newProductsRelations = [];
+        foreach ($configType->getUsedProductIds() as $existingUsedProductId) {
+            $newProductsRelations[$existingUsedProductId] = [];
         }
 
-        $productRelations = $oldProductsRelations + $newProductsRelations;
+        $newProductsRelations[$product->getId()] = $configData;
+        $configProduct->setData('configurable_products_data', $newProductsRelations);
 
-        $configProduct->setData('configurable_products_data', $productRelations);
-        $configProduct->save();
+        try {
+            $configProduct->save();
+        } catch (Exception $e) {
+            throw new MagentoSaveException($e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -114,7 +117,7 @@ class ConfigurableProductService
         $productTypeInstance->setUsedProductAttributeIds($attributeIds);
         $configurableAttributesData = $productTypeInstance->getConfigurableAttributesAsArray();
 
-        $product->setData([
+        $product->addData([
             'can_save_configurable_attributes' => true,
             'configurable_attributes_data'     => $configurableAttributesData,
         ]);
