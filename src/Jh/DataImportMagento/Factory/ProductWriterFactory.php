@@ -6,6 +6,7 @@ use Jh\DataImportMagento\Service\AttributeService;
 use Jh\DataImportMagento\Service\ConfigurableProductService;
 use Jh\DataImportMagento\Service\RemoteImageImporter;
 use Jh\DataImportMagento\Writer\ProductWriter;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class ProductWriterFactory
@@ -17,7 +18,7 @@ class ProductWriterFactory
     /**
      * @return ProductWriter
      */
-    public function __invoke()
+    public function __invoke(LoggerInterface $logger)
     {
         $productModel           = \Mage::getModel('catalog/product');
         $eavAttrModel           = \Mage::getModel('eav/entity_attribute');
@@ -27,7 +28,8 @@ class ProductWriterFactory
             $productModel,
             new RemoteImageImporter,
             new AttributeService($eavAttrModel, $eavAttrSrcModel),
-            new ConfigurableProductService($eavAttrModel, \Mage::getModel('catalog/product'))
+            new ConfigurableProductService($eavAttrModel, \Mage::getModel('catalog/product')),
+            $logger
         );
     }
 }
