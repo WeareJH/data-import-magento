@@ -9,6 +9,7 @@ use Jh\DataImportMagento\Service\AttributeService;
 use Jh\DataImportMagento\Service\ConfigurableProductService;
 use Jh\DataImportMagento\Service\RemoteImageImporter;
 use Jh\DataImportMagento\Factory\ConfigurableProductServiceFactory;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class ProductWriter
@@ -18,6 +19,7 @@ use Jh\DataImportMagento\Factory\ConfigurableProductServiceFactory;
  */
 class ProductWriter extends AbstractWriter
 {
+
     /**
      * @var \Mage_Catalog_Model_Product
      */
@@ -54,21 +56,29 @@ class ProductWriter extends AbstractWriter
     protected $defaultStockData = array();
 
     /**
-     * @param \Mage_Catalog_Model_Product                   $productModel
-     * @param RemoteImageImporter                           $remoteImageImporter
-     * @param AttributeService                              $attributeService
-     * @param ConfigurableProductService                    $configurableProductService
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
+     * @param \Mage_Catalog_Model_Product $productModel
+     * @param RemoteImageImporter         $remoteImageImporter
+     * @param AttributeService            $attributeService
+     * @param ConfigurableProductService  $configurableProductService
+     * @param LoggerInterface             $logger
      */
     public function __construct(
         \Mage_Catalog_Model_Product $productModel,
         RemoteImageImporter $remoteImageImporter,
         AttributeService $attributeService,
-        ConfigurableProductService $configurableProductService
+        ConfigurableProductService $configurableProductService,
+        LoggerInterface $logger
     ) {
         $this->productModel                 = $productModel;
         $this->remoteImageImporter          = $remoteImageImporter;
         $this->configurableProductService   = $configurableProductService;
         $this->attributeService             = $attributeService;
+        $this->logger                       = $logger;
     }
 
     /**
@@ -169,7 +179,18 @@ class ProductWriter extends AbstractWriter
         if (isset($item['images']) && is_array($item['images'])) {
             $product->setData('url_key', false);
             foreach ($item['images'] as $image) {
-                $this->remoteImageImporter->importImage($product, $image);
+                try {
+                    $this->remoteImageImporter->importImage($product, $image);
+                } catch (\RuntimeException $e) {
+                    $this->logger->error(
+                        sprintf(
+                            'Error importing image for product with SKU: "%s". Error: "%s"',
+                            $item['sku'],
+                            $e->getMessage()
+                        )
+                    );
+                    continue;
+                }
             }
         }
     }

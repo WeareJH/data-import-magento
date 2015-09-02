@@ -14,6 +14,8 @@ class ProductWriterFactoryTest extends \PHPUnit_Framework_TestCase
     public function testFactoryReturnsInstance()
     {
         $factory = new ProductWriterFactory;
-        $this->assertInstanceOf('\Jh\DataImportMagento\Writer\ProductWriter', $factory->__invoke());
+        $this->assertInstanceOf('\Jh\DataImportMagento\Writer\ProductWriter', $factory->__invoke(
+            $this->getMock('\Psr\Log\LoggerInterface')
+        ));
     }
 }

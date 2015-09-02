@@ -2,6 +2,8 @@
 
 namespace Jh\DataImportMagento\Service;
 
+use RuntimeException;
+
 /**
  * Class RemoteImageImporter
  * @package Jh\DataImportMagento\Service
@@ -13,6 +15,7 @@ class RemoteImageImporter
     /**
      * @param \Mage_Catalog_Model_Product $product
      * @param string                      $url
+     * @throws RuntimeException
      */
     public function importImage(\Mage_Catalog_Model_Product $product, $url)
     {
@@ -24,7 +27,12 @@ class RemoteImageImporter
             mkdir(dirname($filePath), 0755, true);
         }
 
-        file_put_contents($filePath, file_get_contents($url));
+        $data = @file_get_contents($url);
+        if ($data == false) {
+            throw new RuntimeException(sprintf('URL returned nothing: "%s"', $url));
+        }
+
+        file_put_contents($filePath, $data);
 
         $mediaAttribute = [
             'thumbnail',

@@ -3,6 +3,7 @@
 namespace Jh\DataImportMagentoTest\Writer;
 
 use Jh\DataImportMagento\Writer\ProductWriter;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class ProductWriterTest
@@ -20,10 +21,16 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
     protected $remoteImageImporter;
     protected $configurableProductService;
 
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
     public function setUp()
     {
         $this->productModel = $this->getMock('\Mage_Catalog_Model_Product', array(), array(), '', false);
         $this->remoteImageImporter = $this->getMock('\Jh\DataImportMagento\Service\RemoteImageImporter');
+        $this->logger = $this->getMock('\Psr\Log\LoggerInterface');
 
         $this->attributeService = $this->getMockBuilder('Jh\DataImportMagento\Service\AttributeService')
             ->disableOriginalConstructor()
@@ -38,7 +45,8 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             $this->productModel,
             $this->remoteImageImporter,
             $this->attributeService,
-            $this->configurableProductService
+            $this->configurableProductService,
+            $this->logger
         );
     }
 
@@ -310,6 +318,46 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->expects($this->at(1))
             ->method('importImage')
             ->with($this->productModel, 'http://image.com/image2.jpg');
+
+        $this->productWriter->writeItem($data);
+    }
+
+    public function testErrorIsLoggedIfImageCouldNotBeImported()
+    {
+        $data = array(
+            'name'                      => 'Product 1',
+            'description'               => 'Description',
+            'attribute_set_id'          => 0,
+            'stock_data'                => array(),
+            'weight'                    => '0',
+            'status'                    => '1',
+            'tax_class_id'              => 2,
+            'website_ids'               => [1],
+            'type_id'                   => 'simple',
+            'url_key'                   => null,
+            'sku'                       => 'PROD1',
+            'images'                    => ['http://image.com/image1.jpg']
+        );
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('addData')
+            ->with($data);
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('save');
+
+        $this->remoteImageImporter
+            ->expects($this->once())
+            ->method('importImage')
+            ->with($this->productModel, 'http://image.com/image1.jpg')
+            ->will($this->throwException(new \RuntimeException('nope!')));
+
+        $this->logger
+            ->expects($this->once())
+            ->method('error')
+            ->with('Error importing image for product with SKU: "PROD1". Error: "nope!"');
 
         $this->productWriter->writeItem($data);
     }

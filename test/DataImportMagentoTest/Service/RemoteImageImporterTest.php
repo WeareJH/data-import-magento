@@ -57,4 +57,12 @@ class RemoteImageImporterTest extends \PHPUnit_Framework_TestCase
         unlink($path);
         rmdir(dirname($path));
     }
+
+    public function testImportThrowsExceptionIfImageFailsToDownload()
+    {
+        $url = 'http://www.notaurl.lol';
+        $this->setExpectedException('RuntimeException', 'URL returned nothing: "http://www.notaurl.lol"');
+
+        $this->importer->importImage($this->product, $url);
+    }
 }
