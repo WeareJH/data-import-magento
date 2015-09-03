@@ -66,7 +66,7 @@ class RemoteImageImporterTest extends \PHPUnit_Framework_TestCase
         $this->importer->importImage($this->product, $url);
     }
 
-    public function testImportThrowsExeptionIfImageFailsToImport()
+    public function testImportThrowsExceptionIfImageFailsToImport()
     {
         $url  = __DIR__ . '/../Fixtures/honey.jpg';
         $path = realpath(__DIR__ . '/../../../');
