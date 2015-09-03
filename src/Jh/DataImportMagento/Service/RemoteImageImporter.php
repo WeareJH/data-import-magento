@@ -2,6 +2,7 @@
 
 namespace Jh\DataImportMagento\Service;
 
+use Mage_Core_Exception;
 use RuntimeException;
 
 /**
@@ -19,6 +20,7 @@ class RemoteImageImporter
      */
     public function importImage(\Mage_Catalog_Model_Product $product, $url)
     {
+        $url       = trim($url);
         $extension = pathinfo($url, PATHINFO_EXTENSION);
         $fileName  = sprintf('%s.%s', md5(sprintf('%s-%s', basename($url), $product->getSku())), $extension);
         $filePath  = sprintf('%s/import/%s', \Mage::getBaseDir('media'), $fileName);
@@ -40,7 +42,11 @@ class RemoteImageImporter
             'image'
         ];
 
-        $product->addImageToMediaGallery($filePath, $mediaAttribute, $move = true, $disable = false);
-        $product->getResource()->save($product);
+        try {
+            $product->addImageToMediaGallery($filePath, $mediaAttribute, $move = true, $disable = false);
+            $product->getResource()->save($product);
+        } catch (Mage_Core_Exception $e) {
+            throw new RuntimeException($e->getMessage());
+        }
     }
 }
