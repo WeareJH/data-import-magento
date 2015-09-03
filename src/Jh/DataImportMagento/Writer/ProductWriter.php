@@ -171,8 +171,8 @@ class ProductWriter extends AbstractWriter
                         $item['parent_sku']
                     );
             } catch (MagentoSaveException $e) {
-                //TODO: Collect these errors and throw an exception
-                //should we continue saving the product or bail?
+                $product->delete();
+                throw $e;
             }
         }
 
@@ -182,14 +182,14 @@ class ProductWriter extends AbstractWriter
                 try {
                     $this->remoteImageImporter->importImage($product, $image);
                 } catch (\RuntimeException $e) {
-                    $this->logger->error(
+                    $product->delete();
+                    throw new MagentoSaveException(
                         sprintf(
                             'Error importing image for product with SKU: "%s". Error: "%s"',
                             $item['sku'],
                             $e->getMessage()
                         )
                     );
-                    continue;
                 }
             }
         }
