@@ -2,6 +2,7 @@
 
 namespace Jh\DataImportMagentoTest\Writer;
 
+use Jh\DataImportMagento\Exception\MagentoSaveException;
 use Jh\DataImportMagento\Writer\ProductWriter;
 use Psr\Log\LoggerInterface;
 
@@ -280,6 +281,50 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
         $this->productWriter->writeItem($data);
     }
 
+    public function testProductIsRemovedAndExceptionIsThrownIfErrorAssingingSimpleToParent()
+    {
+        $data = array(
+            'name'                      => 'Product 1',
+            'description'               => 'Description',
+            'attribute_set_id'          => 0,
+            'stock_data'                => array(),
+            'weight'                    => '0',
+            'status'                    => '1',
+            'tax_class_id'              => 2,
+            'website_ids'               => [1],
+            'type_id'                   => 'simple',
+            'url_key'                   => null,
+            'sku'                       => 'PROD1',
+            'parent_sku'                => 'PARENT1',
+        );
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('addData')
+            ->with($data);
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('save');
+
+        $this->configurableProductService
+            ->expects($this->once())
+            ->method('assignSimpleProductToConfigurable')
+            ->with($this->productModel, 'PARENT1')
+            ->will($this->throwException(new MagentoSaveException('nope')));
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('delete');
+
+        $this->setExpectedException(
+            '\Jh\DataImportMagento\Exception\MagentoSaveException',
+            'nope'
+        );
+
+        $this->productWriter->writeItem($data);
+    }
+
     public function testImagesAreImported()
     {
         $data = array(
@@ -322,7 +367,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
         $this->productWriter->writeItem($data);
     }
 
-    public function testErrorIsLoggedIfImageCouldNotBeImported()
+    public function testExceptionIsThrownIfImageCouldNotBeImported()
     {
         $data = array(
             'name'                      => 'Product 1',
@@ -354,10 +399,14 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
             ->with($this->productModel, 'http://image.com/image1.jpg')
             ->will($this->throwException(new \RuntimeException('nope!')));
 
-        $this->logger
+        $this->productModel
             ->expects($this->once())
-            ->method('error')
-            ->with('Error importing image for product with SKU: "PROD1". Error: "nope!"');
+            ->method('delete');
+
+        $this->setExpectedException(
+            '\Jh\DataImportMagento\Exception\MagentoSaveException',
+            'Error importing image for product with SKU: "PROD1". Error: "nope!"'
+        );
 
         $this->productWriter->writeItem($data);
     }
