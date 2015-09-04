@@ -162,7 +162,8 @@ class ProductWriter extends AbstractWriter
 
         if (isset($item['type_id']) &&
             $item['type_id'] === 'simple' &&
-            isset($item['parent_sku'])
+            isset($item['parent_sku']) &&
+            !empty($item['parent_sku'])
         ) {
             try {
                 $this->configurableProductService

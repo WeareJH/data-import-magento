@@ -247,6 +247,39 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
         $this->productWriter->writeItem($data);
     }
 
+    public function testSimpleProductWithEmptyParentIsNotConfigured()
+    {
+        $data = array(
+            'name'                      => 'Product 1',
+            'description'               => 'Description',
+            'attribute_set_id'          => 0,
+            'stock_data'                => array(),
+            'weight'                    => '0',
+            'status'                    => '1',
+            'tax_class_id'              => 2,
+            'website_ids'               => [1],
+            'type_id'                   => 'simple',
+            'url_key'                   => null,
+            'sku'                       => 'PROD1',
+            'parent_sku'                => '',
+        );
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('addData')
+            ->with($data);
+
+        $this->productModel
+            ->expects($this->once())
+            ->method('save');
+
+        $this->configurableProductService
+            ->expects($this->never())
+            ->method('assignSimpleProductToConfigurable');
+
+        $this->productWriter->writeItem($data);
+    }
+
     public function testSimpleProductWithParentIsConfigured()
     {
         $data = array(
@@ -281,7 +314,7 @@ class ProductWriterTest extends \PHPUnit_Framework_TestCase
         $this->productWriter->writeItem($data);
     }
 
-    public function testProductIsRemovedAndExceptionIsThrownIfErrorAssingingSimpleToParent()
+    public function testProductIsRemovedAndExceptionIsThrownIfErrorAssigningSimpleToParent()
     {
         $data = array(
             'name'                      => 'Product 1',
