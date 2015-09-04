@@ -47,6 +47,7 @@ class AttributeService
      */
     public function getAttrCodeCreateIfNotExist($entityType, $attrCode, $attrValue)
     {
+        $attrValue = strtolower($attrValue);
         if (isset($this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue])) {
             return $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue];
         }
@@ -70,10 +71,14 @@ class AttributeService
         $options = $attributeOptionsModel->getAllOptions(false);
 
         foreach ($options as $option) {
-            if (strtolower($option['label']) == strtolower($attrValue)) {
-                $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue] = $option['value'];
-                return $option['value'];
-            }
+            $optionId       = strtolower($option['value']);
+            $optionValue    = strtolower($option['label']);
+
+            $this->cachedAttributeOptionsValues[$entityType][$attrCode][$optionValue] = $optionId;
+        }
+
+        if (isset($this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue])) {
+            return $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue];
         }
 
         //not found - create it
@@ -86,10 +91,9 @@ class AttributeService
 
         $attributeOptionsModel  = clone $this->eavAttrSrcModel;
         $attributeOptionsModel->setAttribute($attribute);
-        $id = $attributeOptionsModel->getOptionId(strtolower($attrValue));
+        $id = $attributeOptionsModel->getOptionId($attrValue);
 
         $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue] = $id;
-
         return $id;
     }
 }
