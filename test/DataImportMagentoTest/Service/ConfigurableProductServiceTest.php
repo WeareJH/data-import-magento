@@ -274,6 +274,42 @@ class ConfigurableProductServiceTest extends \PHPUnit_Framework_TestCase
         $this->service->setupConfigurableProduct($configProduct, ['some_attr']);
     }
 
+    public function testSetupConfigProductThrowsExceptionIfGivenAttributeIsNotInTheAttributeSetAssignedToProduct()
+    {
+        $configProduct = $this->getMock('Mage_Catalog_Model_Product');
+        $configProduct
+            ->expects($this->exactly(2))
+            ->method('getData')
+            ->will($this->returnValueMap([
+                ['sku', null, "PROD1"],
+                ['attribute_set_id', null, 4],
+            ]));
+
+        $this->eavAttrModel
+            ->expects($this->once())
+            ->method('getIdByCode')
+            ->with('catalog_product', 'some_attr')
+            ->will($this->returnValue(20));
+
+        $configType = $this->getMock('Mage_Catalog_Model_Product_Type_Configurable');
+        $configProduct
+            ->expects($this->once())
+            ->method('getTypeInstance')
+            ->will($this->returnValue($configType));
+
+        $configType
+            ->expects($this->once())
+            ->method('getAttributeById')
+            ->with(20)
+            ->will($this->returnValue(false));
+
+        $msg  = 'Cannot create configurable product with SKU: "PROD1". Attribute: "some_attr" is not assigned to the ';
+        $msg .= 'attribute set: "4"';
+
+        $this->setExpectedException('Jh\DataImportMagento\Exception\MagentoSaveException', $msg);
+        $this->service->setupConfigurableProduct($configProduct, ['some_attr', 'some_attr2']);
+    }
+
     public function testSetupConfigProductCallsCorrectMethodsOnProduct()
     {
         $configProduct = $this->getMock('Mage_Catalog_Model_Product');
@@ -291,6 +327,14 @@ class ConfigurableProductServiceTest extends \PHPUnit_Framework_TestCase
             ->expects($this->once())
             ->method('getTypeInstance')
             ->will($this->returnValue($configType));
+
+        $configType
+            ->expects($this->any())
+            ->method('getAttributeById')
+            ->will($this->returnValueMap([
+                [20, null, true],
+                [22, null, true]
+            ]));
 
         $configType
             ->expects($this->once())
