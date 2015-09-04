@@ -94,12 +94,14 @@ class ConfigurableProductService
      */
     public function setupConfigurableProduct(\Mage_Catalog_Model_Product $product, array $configurableAttributes)
     {
+        $productTypeInstance = $product->getTypeInstance();
         $attributeIds = [];
 
         //get attribute ID's
         foreach ($configurableAttributes as $attribute) {
-            $attributeCode = $this->eavAttrModel->getIdByCode('catalog_product', $attribute);
-            if (false === $attributeCode) {
+            $attributeId = $this->eavAttrModel->getIdByCode('catalog_product', $attribute);
+
+            if (false === $attributeId) {
                 throw new MagentoSaveException(
                     sprintf(
                         'Cannot create configurable product with SKU: "%s". Attribute: "%s" does not exist',
@@ -109,11 +111,19 @@ class ConfigurableProductService
                 );
             }
 
-            $attributeIds[] = $attributeCode;
+            if (!$productTypeInstance->getAttributeById($attributeId)) {
+                $msg  = 'Cannot create configurable product with SKU: "%s". Attribute: "%s" is not assigned ';
+                $msg .= 'to the attribute set: "%s"';
+
+                throw new MagentoSaveException(
+                    sprintf($msg, $product->getData('sku'), $attribute, $product->getData('attribute_set_id'))
+                );
+            }
+
+            $attributeIds[] = $attributeId;
         }
 
         //set the attributes that should be configurable for this product
-        $productTypeInstance = $product->getTypeInstance();
         $productTypeInstance->setUsedProductAttributeIds($attributeIds);
         $configurableAttributesData = $productTypeInstance->getConfigurableAttributesAsArray();
 
