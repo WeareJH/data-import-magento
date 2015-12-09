@@ -1,6 +1,7 @@
 <?php
 namespace Jh\DataImportMagento\Writer\Product;
 
+use Ddeboer\DataImport\Exception\WriterException;
 use Ddeboer\DataImport\Writer\AbstractWriter;
 use Jh\DataImportMagento\Exception\MagentoSaveException;
 
@@ -33,9 +34,11 @@ class ProductUpdateAttributeWriter extends AbstractWriter
     public function writeItem(array $item)
     {
         $productModel = clone $this->productModel;
-        $product = $productModel->loadByAttribute('sku', $item['sku']);
+        $sku          = $item['sku'];
+        $product      = $productModel->loadByAttribute('sku', $sku);
+
         if (!$product) {
-            return;
+            throw new WriterException(sprintf('Product with SKU: %s does not exist in Magento', $sku));
         }
 
         $product->addData($item);
