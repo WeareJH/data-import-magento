@@ -19,7 +19,7 @@ class ShipmentWriterFactory
         $orderModel           = \Mage::getModel('sales/order');
         $transaction          = \Mage::getModel('core/resource_transaction');
         $trackingModel        = \Mage::getModel('sales/order_shipment_track');
-        $options              = $options = [
+        $options              = [
             'send_shipment_email' => (bool) \Mage::getStoreConfig('sales_email/shipment/enabled')
         ];
 
