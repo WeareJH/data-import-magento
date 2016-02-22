@@ -35,7 +35,7 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             ->getMock();
 
         $this->options = [
-            'emailFlag' => 1
+            'send_shipment_email' => 1
         ];
 
         $this->shipmentWriter = new ShipmentWriter(

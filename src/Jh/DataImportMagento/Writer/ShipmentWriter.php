@@ -34,7 +34,7 @@ class ShipmentWriter extends AbstractWriter
      * @var array
      */
     protected $options = [
-        'emailFlag' => 0
+        'send_shipment_email' => false
     ];
 
     /**
@@ -56,7 +56,7 @@ class ShipmentWriter extends AbstractWriter
     }
 
     /**
-     * @param $options
+     * @param array $options
      */
     public function setOptions(array $options)
     {
@@ -91,7 +91,7 @@ class ShipmentWriter extends AbstractWriter
                 ->addObject($shipment->getOrder())
                 ->save();
 
-            if (array_key_exists('tracks', $item)) {
+            if (array_key_exists('tracks', $item) && is_array($item['tracks'])) {
                 foreach ($item['tracks'] as $currentTrack) {
                     $tracking = clone $this->trackingModel;
                     $tracking->setShipment($shipment);
@@ -110,7 +110,7 @@ class ShipmentWriter extends AbstractWriter
             throw new MagentoSaveException($e->getMessage());
         }
 
-        if ($this->options['emailFlag']) {
+        if ($this->options['send_shipment_email']) {
             $shipment->sendEmail(true);
         }
     }
