@@ -14,8 +14,6 @@ class ShipmentWriterFactoryTest extends \PHPUnit_Framework_TestCase
     public function testFactoryReturnsInstance()
     {
         $factory = new ShipmentWriterFactory();
-        $this->assertInstanceOf('\Jh\DataImportMagento\Writer\ShipmentWriter', $factory->__invoke(
-            $this->getMock('\Psr\Log\LoggerInterface')
-        ));
+        $this->assertInstanceOf('\Jh\DataImportMagento\Writer\ShipmentWriter', $factory->__invoke());
     }
 }
