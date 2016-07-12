@@ -417,6 +417,137 @@ class NestedValueConverterWorkflowTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expected, $convertedItem);
     }
 
+    public function testValueConverterWildCard()
+    {
+        $workflow = $this->getWorkflow();
+        $valueConverter = new CallbackValueConverter(
+            function () {
+                return 'convertedValue';
+            }
+        );
+
+        $workflow->addValueConverter(
+            '*',
+            $valueConverter
+        );
+
+        $method = new \ReflectionMethod($workflow, 'convertItem');
+        $method->setAccessible(true);
+
+        $data = [
+            'firstName' => 'Mark',
+            'lastName' => 'Corrigan',
+        ];
+
+        $convertedItem = $method->invoke($workflow, $data);
+
+        $expected = [
+            'firstName' => 'convertedValue',
+            'lastName' => 'convertedValue',
+        ];
+
+        $this->assertSame($expected, $convertedItem);
+    }
+
+    public function testValueConverterNestedWildCard()
+    {
+        $workflow = $this->getWorkflow();
+        $valueConverter = new CallbackValueConverter(function ($value) {
+            return 'convertedValue';
+        });
+
+        $workflow->addValueConverter(
+            'names[]/*',
+            $valueConverter
+        );
+
+        $method = new \ReflectionMethod($workflow, 'convertItem');
+        $method->setAccessible(true);
+
+        $data = [
+            'names' => [
+                [
+                    'first' => 'James',
+                    'last' => 'Bond'
+                ],
+                [
+                    'first' => 'Miss',
+                    'last' => 'Moneypenny'
+                ],
+            ]
+        ];
+
+        $convertedItem = $method->invoke($workflow, $data);
+
+        $expected = [
+            'names' => [
+                [
+                    'first' => 'convertedValue',
+                    'last' => 'convertedValue'
+                ],
+                [
+                    'first' => 'convertedValue',
+                    'last' => 'convertedValue'
+                ],
+            ]
+        ];
+
+        $this->assertSame($expected, $convertedItem);
+    }
+
+    public function testValueConverterWithMultipleWildCards()
+    {
+        $workflow = $this->getWorkflow();
+        $valueConverter = new CallbackValueConverter(function ($value) {
+            return is_string($value) ? 'convertedValue' : $value;
+        });
+
+        $workflow->addValueConverter(
+            [
+                'names[]/*',
+                '*',
+            ],
+            $valueConverter
+        );
+
+        $method = new \ReflectionMethod($workflow, 'convertItem');
+        $method->setAccessible(true);
+
+        $data = [
+            'someKey' => 'someValue',
+            'someOtherKey' => 'someOtherValue',
+            'names' => [
+                [
+                    'first' => 'James',
+                    'last' => 'Bond'
+                ],
+                [
+                    'first' => 'Miss',
+                    'last' => 'Moneypenny'
+                ],
+            ]
+        ];
+
+        $convertedItem = $method->invoke($workflow, $data);
+
+        $expected = [
+            'someKey' => 'convertedValue',
+            'someOtherKey' => 'convertedValue',
+            'names' => [
+                [
+                    'first' => 'convertedValue',
+                    'last' => 'convertedValue'
+                ],
+                [
+                    'first' => 'convertedValue',
+                    'last' => 'convertedValue'
+                ],
+            ]
+        ];
+
+        $this->assertSame($expected, $convertedItem);
+    }
+
     protected function getWorkflow()
     {
         $reader = new ArrayReader([

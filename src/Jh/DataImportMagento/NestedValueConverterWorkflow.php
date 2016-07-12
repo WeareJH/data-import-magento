@@ -95,7 +95,15 @@ class NestedValueConverterWorkflow extends Workflow
         if (!count($properties)) {
             //this is the deepest field
 
-            if (isset($data[$property]) || array_key_exists($property, $data)) {
+            //apply to all properties
+            if ($property === '*') {
+                $data = array_map(function ($value) use ($converters) {
+                    foreach ($converters as $converter) {
+                        $value = $converter->convert($value);
+                    }
+                    return $value;
+                }, $data);
+            } elseif (isset($data[$property]) || array_key_exists($property, $data)) {
                 //This is an associative array
                 foreach ($converters as $converter) {
                     $data[$property] = $converter->convert($data[$property]);
