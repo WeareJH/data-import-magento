@@ -2,6 +2,7 @@
 
 namespace Jh\DataImportMagento;
 
+use Ddeboer\DataImport\Exception\UnexpectedTypeException;
 use Ddeboer\DataImport\ValueConverter\ValueConverterInterface;
 use Ddeboer\DataImport\Workflow;
 
