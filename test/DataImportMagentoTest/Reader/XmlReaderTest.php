@@ -18,6 +18,7 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
     {
         $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r");
         $this->reader = new XmlReader($file);
+        $this->reader->rewind();
     }
 
     public function testInvalidXmlThrowsException()
@@ -28,6 +29,7 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
 
         $this->setExpectedException('Ddeboer\DataImport\Exception\ReaderException', $expectedMessage);
         $this->reader = new XmlReader($file);
+        $this->reader->rewind();
     }
 
     public function testStructureOfDecodedXmlIsValid()
@@ -143,7 +145,6 @@ class XmlReaderTest extends \PHPUnit_Framework_TestCase
         );
 
         $file = fopen(__DIR__ . '/../Fixtures/valid_xml.xml', "r+");
-        new XmlReader($file, [], 'notatype');
-
+        (new XmlReader($file, [], 'notatype'))->rewind();
     }
 }
