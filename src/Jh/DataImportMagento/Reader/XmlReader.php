@@ -6,32 +6,14 @@ use AydinHassan\XmlFuse\XmlFuse;
 use AydinHassan\XmlFuse\XmlNest;
 use Ddeboer\DataImport\Exception\ReaderException;
 use Ddeboer\DataImport\Reader\ArrayReader;
-use Ddeboer\DataImport\Reader\ReaderInterface;
 
 /**
+ * Class XmlReader
+ * @package Jh\DataImportMagento\Reader
  * @author Aydin Hassan <aydin@wearejh.com>
  */
-class XmlReader implements ReaderInterface
+class XmlReader extends ArrayReader
 {
-    /**
-     * @var resource
-     */
-    private $stream;
-
-    /**
-     * @var array
-     */
-    private $xPaths;
-
-    /**
-     * @var string
-     */
-    private $xmlParseType;
-
-    /**
-     * @var ArrayReader|null
-     */
-    private $innerReader;
 
     /**
      * @param array $stream
@@ -49,90 +31,13 @@ class XmlReader implements ReaderInterface
             );
         }
 
-        $this->stream = $stream;
-        $this->xmlParseType = $type;
-        $this->xPaths = $xPaths;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function current()
-    {
-        $this->init();
-        return $this->innerReader->current();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function next()
-    {
-        $this->init();
-        $this->innerReader->next();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function key()
-    {
-        return $this->innerReader->key();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function valid()
-    {
-        $this->init();
-        return $this->innerReader->valid();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function rewind()
-    {
-        $this->init();
-        $this->innerReader->rewind();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getFields()
-    {
-        $this->init();
-        return $this->innerReader->getFields();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function count()
-    {
-        $this->init();
-        return $this->innerReader->count();
-    }
-
-    /**
-     * Perform the parsing and initialise the inner reader
-     * if it has not been done so already.
-     */
-    private function init()
-    {
-        if (null !== $this->innerReader) {
-            return;
-        }
-
-        $xml = stream_get_contents($this->stream);
+        $xml = stream_get_contents($stream);
         try {
-            $parser = XmlFuse::factory($this->xmlParseType, $xml, $this->xPaths);
+            $parser = XmlFuse::factory($type, $xml, $xPaths);
         } catch (\UnexpectedValueException $e) {
             throw new ReaderException($e->getMessage(), 0, $e);
         }
 
-        $this->innerReader = new ArrayReader($parser->parse());
+        parent::__construct($parser->parse());
     }
 }
