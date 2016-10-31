@@ -64,20 +64,26 @@ class CsvWriter extends AbstractWriter
     protected $headersCount;
 
     /**
-     * Constructor
-     *
-     * @param \SplFileObject $file      CSV file
-     * @param string         $mode      See http://php.net/manual/en/function.fopen.php
-     * @param string         $delimiter The delimiter
-     * @param string         $enclosure The enclosure
-     * @param string         $eol       The end of line string
+     * @var bool
      */
-    public function __construct(\SplFileObject $file, $mode = 'w', $delimiter = ';', $enclosure = '"', $eol = "\n")
+    private $encloseEmptyFields = false;
+
+    /**
+     *
+     * @param \SplFileObject $file CSV file
+     * @param string $mode See http://php.net/manual/en/function.fopen.php
+     * @param string $delimiter The delimiter
+     * @param string $enclosure The enclosure
+     * @param string $eol The end of line string
+     * @param bool $encloseEmptyFields Whether to enclose empty fields or not
+     */
+    public function __construct(\SplFileObject $file, $mode = 'w', $delimiter = ';', $enclosure = '"', $eol = "\n", $encloseEmptyFields = false)
     {
-        $this->fp = fopen($file->getPathname(), $mode);
-        $this->delimiter = $delimiter;
-        $this->enclosure = $enclosure;
-        $this->eol       = $eol;
+        $this->fp                 = fopen($file->getPathname(), $mode);
+        $this->delimiter          = $delimiter;
+        $this->enclosure          = $enclosure;
+        $this->eol                = $eol;
+        $this->encloseEmptyFields = $encloseEmptyFields;
     }
 
     /**
@@ -123,10 +129,12 @@ class CsvWriter extends AbstractWriter
     {
         $line = implode($this->delimiter, array_map(function ($string) {
             $string = str_replace('"', '', $string);
-            //if the string is empty don't quote it
-            if (empty($string) && $string !== '0') {
+
+            if (!$this->encloseEmptyFields && empty($string) && $string !== '0') {
+                //if the string is empty don't quote it
                 return $string;
             }
+
             return sprintf('%s%s%s', $this->enclosure, $string, $this->enclosure);
         }, $data));
 
