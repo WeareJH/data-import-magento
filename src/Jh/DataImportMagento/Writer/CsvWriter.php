@@ -77,8 +77,14 @@ class CsvWriter extends AbstractWriter
      * @param string $eol The end of line string
      * @param bool $encloseEmptyFields Whether to enclose empty fields or not
      */
-    public function __construct(\SplFileObject $file, $mode = 'w', $delimiter = ';', $enclosure = '"', $eol = "\n", $encloseEmptyFields = false)
-    {
+    public function __construct(
+        \SplFileObject $file,
+        $mode = 'w',
+        $delimiter = ';',
+        $enclosure = '"',
+        $eol = "\n",
+        $encloseEmptyFields = false
+    ) {
         $this->fp                 = fopen($file->getPathname(), $mode);
         $this->delimiter          = $delimiter;
         $this->enclosure          = $enclosure;
